@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'UniGol',
-        short_name: 'Fútbol',
+        name: 'UnitGol',
+        short_name: 'UnitGol',
         description: 'Aplicación para gestionar partidos de fútbol entre amigos',
         theme_color: '#ffffff',
         background_color: '#ffffff',

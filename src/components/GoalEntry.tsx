@@ -79,7 +79,7 @@ export function GoalEntry({ players, onAddGoal }: GoalEntryProps) {
         type="button"
         onClick={handleAddGoal}
         disabled={!scorer || !minute}
-        className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         Añadir Gol
       </button>

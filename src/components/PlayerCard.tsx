@@ -46,14 +46,14 @@ export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
     <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <User className="w-8 h-8 text-blue-600" />
+          <User className="w-8 h-8 text-emerald-600" />
           <h3 className="text-lg font-semibold">{player.name}</h3>
         </div>
         <div className="flex items-center gap-4">
           {onEdit && (
             <button
               onClick={handleEdit}
-              className="text-blue-500 hover:text-blue-700 transition-colors"
+              className="text-emerald-500 hover:text-emerald-700 transition-colors"
               title="Editar jugador"
             >
               <Edit className="w-5 h-5" />
@@ -90,7 +90,7 @@ export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
       </div>
       <div className="mt-3 pt-3 border-t">
         <p className="text-gray-600 text-sm">Puntuación del jugador</p>
-        <p className="font-semibold text-blue-600">{score.toFixed(1)}</p>
+        <p className="font-semibold text-emerald-600">{score.toFixed(1)}</p>
       </div>
 
       {/* Modal for editing */}
@@ -161,7 +161,7 @@ export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
               >
                 Guardar
               </button>

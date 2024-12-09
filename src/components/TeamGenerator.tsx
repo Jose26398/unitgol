@@ -30,14 +30,14 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex justify-between mb-6 flex-col sm:flex-row gap-4 sm:gap-0">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-blue-600" />
+          <Users className="w-6 h-6 text-emerald-600" />
           <h2 className="text-xl font-semibold">Generador de Equipos</h2>
         </div>
         <button
           onClick={handleGenerateTeams}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
         >
           <Shuffle className="w-4 h-4" />
           Generar Equipos
@@ -53,7 +53,7 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
               onClick={() => handleTogglePlayer(player)}
               className={`flex items-center p-2 border rounded-md cursor-pointer ${
                 selectedPlayers.some(p => p.id === player.id)
-                  ? 'bg-blue-50 border-blue-300'
+                  ? 'bg-emerald-50 border-emerald-300'
                   : 'hover:bg-gray-100'
               }`}
             >
@@ -68,7 +68,7 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
                 type="checkbox"
                 checked={selectedPlayers.some(p => p.id === player.id)}
                 onChange={() => handleTogglePlayer(player)}
-                className="form-checkbox text-blue-600"
+                className="form-checkbox text-emerald-600"
                 aria-label={`Seleccionar a ${player.name}`}
               />
             </div>

@@ -38,7 +38,7 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsEditing(true)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
             title="Editar partido"
           >
             <Edit className="w-5 h-5" />
@@ -52,10 +52,10 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 items-center gap-4">
+      <div className="grid grid-cols-3 gap-4 align-top">
         <div className="text-center">
           <div className="font-semibold mb-2">Equipo A</div>
-          <div className="text-2xl font-bold text-blue-600">{match.teamA.score}</div>
+          <div className="text-2xl font-bold text-emerald-600">{match.teamA.score}</div>
           <div className="mt-2 text-sm text-gray-600">
             {match.teamA.players.map(p => p.name).join(', ')}
           </div>
@@ -65,7 +65,7 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         
         <div className="text-center">
           <div className="font-semibold mb-2">Equipo B</div>
-          <div className="text-2xl font-bold text-blue-600">{match.teamB.score}</div>
+          <div className="text-2xl font-bold text-emerald-600">{match.teamB.score}</div>
           <div className="mt-2 text-sm text-gray-600">
             {match.teamB.players.map(p => p.name).join(', ')}
           </div>

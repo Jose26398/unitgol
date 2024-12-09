@@ -69,7 +69,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
   return (
     <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg shadow-lg p-8">
       <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2 mb-6">
-        <Plus className="w-6 h-6 text-blue-600" />
+        <Plus className="w-6 h-6 text-emerald-600" />
         Añadir nuevo partido
       </h2>
 
@@ -93,7 +93,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
                 key={player.id}
                 onClick={() => handleDivClick(player.id, 'A')}
                 className={`flex items-center justify-between p-2 border rounded-md cursor-pointer ${
-                  teamAPlayers.includes(player.id) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-100'
+                  teamAPlayers.includes(player.id) ? 'bg-emerald-50 border-emerald-300' : 'hover:bg-gray-100'
                 } ${
                   teamBPlayers.includes(player.id) ? 'opacity-50 pointer-events-none' : ''
                 }`}
@@ -105,7 +105,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
                   onClick={e => e.stopPropagation()} // Prevent parent div click
                   onChange={() => togglePlayerSelection(player.id, 'A')}
                   disabled={teamBPlayers.includes(player.id)}
-                  className="form-checkbox text-blue-600"
+                  className="form-checkbox text-emerald-600"
                   aria-label={`Añadir ${player.name} al equipo A`}
                 />
               </div>
@@ -134,7 +134,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
                 key={player.id}
                 onClick={() => handleDivClick(player.id, 'B')}
                 className={`flex items-center justify-between p-2 border rounded-md cursor-pointer ${
-                  teamBPlayers.includes(player.id) ? 'bg-purple-50 border-purple-300' : 'hover:bg-gray-100'
+                  teamBPlayers.includes(player.id) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-100'
                 } ${
                   teamAPlayers.includes(player.id) ? 'opacity-50 pointer-events-none' : ''
                 }`}
@@ -146,7 +146,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
                   onClick={e => e.stopPropagation()} // Prevent parent div click
                   onChange={() => togglePlayerSelection(player.id, 'B')}
                   disabled={teamAPlayers.includes(player.id)}
-                  className="form-checkbox text-purple-600"
+                  className="form-checkbox text-blue-600"
                   aria-label={`Añadir ${player.name} al equipo B`}
                 />
               </div>
@@ -196,7 +196,7 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
       <button
         type="submit"
         disabled={teamAScore === null || teamBScore === null || matchDate === null || teamAPlayers.length === 0 || teamBPlayers.length === 0}
-        className="mt-6 w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="mt-6 w-full bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         Añadir partido
       </button>

@@ -20,10 +20,10 @@ export function NewPlayerForm({ onAddPlayer }: NewPlayerFormProps) {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-        <UserPlus className="w-6 h-6 text-blue-600" />
+        <UserPlus className="w-6 h-6 text-emerald-600" />
         Añadir nuevo jugador
       </h2>
-      <div className="flex gap-4">
+      <div className="flex gap-4 md:flex-row flex-col">
         <input
           type="text"
           value={name}
@@ -34,7 +34,7 @@ export function NewPlayerForm({ onAddPlayer }: NewPlayerFormProps) {
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
         >
           Añadir jugador
         </button>

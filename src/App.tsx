@@ -8,15 +8,15 @@ import { useDatabase } from './hooks/useDatabase';
 
 function App() {
   const { players, matches, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch } = useDatabase();
-  const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'generator'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator'>('matches');
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-blue-600 text-white p-4 shadow-md">
+      <header className="bg-emerald-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex items-center gap-3">
           <img src="/favicon.ico" className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">UniGol</h1>
+          <h1 className="text-2xl font-bold">UnitGol</h1>
         </div>
       </header>
 
@@ -27,15 +27,16 @@ function App() {
           {[
             { label: 'Partidos', value: 'matches' },
             { label: 'Jugadores', value: 'players' },
+            { label: 'Nueva Jornada', value: 'newMatch' },
             { label: 'Generador de Equipos', value: 'generator' },
           ].map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value as 'matches' | 'players' | 'generator')}
-              className={`relative px-4 py-2 font-semibold text-lg ${
+              className={`relative px-4 py-2 font-semibold text-lg text-ellipsis whitespace-nowrap rounded-md ${
                 activeTab === tab.value
-                  ? 'text-blue-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-blue-600'
-                  : 'text-gray-500 hover:text-blue-600'
+                  ? 'text-emerald-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-emerald-600'
+                  : 'text-gray-500 hover:text-emerald-600'
               }`}
               aria-current={activeTab === tab.value ? 'page' : undefined}
             >
@@ -77,15 +78,32 @@ function App() {
           </>
         )}
 
-        {activeTab === 'generator' && (
+        {activeTab === 'newMatch' && (
           <>
             <div className="space-y-6">
-              <TeamGenerator players={players} />
               <NewMatchForm players={players} onAddMatch={addMatch} />
             </div>
           </>
         )}
+
+        {activeTab === 'generator' && (
+          <>
+            <div className="space-y-6">
+              <TeamGenerator players={players} />
+            </div>
+          </>
+        )}
       </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 text-center text-sm text-gray-500 p-4">
+        <div className="container mx-auto">
+          <p>Made with ❤️ by a Magician</p>
+          <a href="https://github.com/Jose26398/unigol" target="_blank" rel="noreferrer">
+            <p className="text-emerald-600">View code on GitHub</p>
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }
