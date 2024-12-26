@@ -5,7 +5,14 @@ A Progressive Web App (PWA) for managing football matches between friends. Track
 ## 📸 Screenshots
 
 ![players](https://github.com/user-attachments/assets/3ccbd11d-3676-4719-a77e-3a45a994bcb1)
-![matches](https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5) ![match](https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a) ![generator](https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57)
+<div style="display: flex; justify-content: space-between;">
+
+<img src="https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5" alt="Matches" width="30%" />
+<img src="https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a" alt="Match" width="30%" />
+<img src="https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57" alt="Generator" width="30%" />
+
+</div>
+
 
 ## 🌟 Features
 
