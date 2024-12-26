@@ -2,13 +2,12 @@
     <img src="public/icons/icon-128x128.png" width="128" height="128"> 
     <h3>UnitGol</h3>
 
-[![en](https://img.shields.io/badge/lang-en-blue.svg)](https://github.com/Jose26398/unitgol/blob/master/README.md)
-[![es](https://img.shields.io/badge/lang-es-yellow.svg)](https://github.com/Jose26398/unitgol/blob/master/README.es.md)
+[![en](https://img.shields.io/badge/lang-en-17a2b8.svg)](https://github.com/Jose26398/unitgol/blob/master/README.md)
+[![es](https://img.shields.io/badge/lang-es-ffc107.svg)](https://github.com/Jose26398/unitgol/blob/master/README.es.md)
 
-![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
-![Version](https://img.shields.io/github/v/release/Jose26398/unitgol?style=flat-square)
-![Deployment Status](https://img.shields.io/website?url=https://unitgol.onrender.com&style=flat-square)
-![License](https://img.shields.io/github/license/Jose26398/unitgol?style=flat-square)
+[![onrender](https://img.shields.io/badge/onrender-online-1eb854?labelColor=black&logo=render&style=flat-square)](https://unitgol.onrender.com)
+[![release](https://img.shields.io/github/v/release/Jose26398/unitgol?labelColor=black&logo=github&style=flat-square)](https://github.com/Jose26398/unitgol/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-ffc107.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
