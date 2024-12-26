@@ -1,19 +1,32 @@
-# ⚽ UnitGol
+<div align="center">
+    <img src="public/icons/icon-128x128.png" width="128" height="128"> 
+    <h3>UnitGol</h3>
 
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](https://github.com/Jose26398/unitgol/blob/master/README.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](https://github.com/Jose26398/unitgol/blob/master/README.es.md)
 
+![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
+![Version](https://img.shields.io/github/v/release/Jose26398/unitgol?style=flat-square)
+![Deployment Status](https://img.shields.io/website?url=https://unitgol.onrender.com&style=flat-square)
+![License](https://img.shields.io/github/license/Jose26398/unitgol?style=flat-square)
 
-Esta aplicación web sirve para gestionar partidos de fútbol entre amigos y peñas. Registra partidos, estadísticas de jugadores y genera equipos automáticamente en base a los datos de los jugadores.
+</div>
+
+<div align="center">
+    <h4>Gestionar partidos de fútbol entre amigos y peñas.</h4>
+
+Sigue los partidos, las estadísticas de los jugadores y genera automáticamente equipos equilibrados basados en los datos de los jugadores.
+
+</div>
 
 ## 📸 Capturas de pantalla
 
 ![players](https://github.com/user-attachments/assets/3ccbd11d-3676-4719-a77e-3a45a994bcb1)
 <div style="display: flex; justify-content: space-between;">
 
-<img src="https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5" alt="Matches" width="30%" />
-<img src="https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a" alt="Match" width="30%" />
-<img src="https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57" alt="Generator" width="30%" />
+<img src="https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5" alt="Matches" width="33%" />
+<img src="https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a" alt="Match" width="33%" />
+<img src="https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57" alt="Generator" width="33%" />
 
 </div>
 
