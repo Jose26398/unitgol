@@ -1,6 +1,9 @@
 # ⚽ UnitGol
 
-A Progressive Web App (PWA) for managing football matches between friends. Track matches, player statistics, and automatically generate balanced teams.
+[![en](https://img.shields.io/badge/lang-en-blue.svg)](https://github.com/Jose26398/unitgol/blob/master/README.md)
+[![es](https://img.shields.io/badge/lang-es-yellow.svg)](https://github.com/Jose26398/unitgol/blob/master/README.es.md)
+
+This web application is designed to manage football matches between friends and teams. Track matches, player statistics, and automatically generate balanced teams based on player data.
 
 ## 📸 Screenshots
 
@@ -85,7 +88,6 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 - Write clear and descriptive commit messages
 - Update documentation as needed
-- Add tests for new features
 - Follow the existing code style
 - Keep pull requests focused on a single feature or fix
 
@@ -113,6 +115,6 @@ Project Link: [https://github.com/Jose26398/unitgol](https://github.com/Jose2639
 
 ---
 
-_Created with ❤️ by a Jose26398. Play fair and have fun!_
+_Created with ❤️ by Jose26398. Play fair and have fun!_
 
 ---
