@@ -113,6 +113,6 @@ Project Link: [https://github.com/Jose26398/unitgol](https://github.com/Jose2639
 
 ---
 
-_Created with ❤️ by a Magician. Play fair and have fun!_
+_Created with ❤️ by a Jose26398. Play fair and have fun!_
 
 ---
