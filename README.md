@@ -2,6 +2,11 @@
 
 A Progressive Web App (PWA) for managing football matches between friends. Track matches, player statistics, and automatically generate balanced teams.
 
+## 📸 Screenshots
+
+![players](https://github.com/user-attachments/assets/3ccbd11d-3676-4719-a77e-3a45a994bcb1)
+![matches](https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5) ![match](https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a) ![generator](https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57)
+
 ## 🌟 Features
 
 | **Category**          | **Description**                                                                                      |
@@ -9,7 +14,7 @@ A Progressive Web App (PWA) for managing football matches between friends. Track
 | **Match Management**   | - Record match results and journeys.<br>- Track goals, assists, and historical match data.         |
 | **Player Statistics**  | - Individual player profiles.<br>- Detailed performance stats:<br>  - Goals and assists.<br>  - Win/loss ratios. |
 | **Smart Team Generator** | - Automatically balance teams based on:<br>  - Win rate.<br>  - Goals and assists per match.<br>  - Overall performance metrics. |
-| **Progressive Web App**| - Works offline.<br>- Supports installation on any device.<br>- Automatic updates.<br>- Local data persistence. |
+| **Progressive Web App**| - Supports installation on any device.<br>- Automatic updates.<br>- Local data persistence. |
 
 ## 🚀 Getting Started
 
