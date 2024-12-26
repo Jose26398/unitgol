@@ -23,9 +23,8 @@ Sigue los partidos, las estadísticas de los jugadores y genera automáticamente
 ![players](https://github.com/user-attachments/assets/3ccbd11d-3676-4719-a77e-3a45a994bcb1)
 <div style="display: flex; justify-content: space-between;">
 
-<img src="https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5" alt="Matches" width="33%" />
-<img src="https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a" alt="Match" width="33%" />
-<img src="https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57" alt="Generator" width="33%" />
+| ![Matches](https://github.com/user-attachments/assets/54d51da2-a17d-4cf9-b5f8-b63629b65db5) | ![Match](https://github.com/user-attachments/assets/244ec828-2f6e-4ad0-ab8c-21d20930012a) | ![Generator](https://github.com/user-attachments/assets/d5ab2d69-cefa-4813-b78b-0597694e1a57) |
+|---|---|---|
 
 </div>
 
