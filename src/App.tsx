@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { PlayerCard } from './components/PlayerCard';
 import { MatchCard } from './components/MatchCard';
-import { TeamGenerator } from './components/TeamGenerator';
 import { NewMatchForm } from './components/NewMatchForm';
 import { NewPlayerForm } from './components/NewPlayerForm';
+import { PlayerCard } from './components/PlayerCard';
+import { PlayerSummaryModal } from './components/PlayerSummaryModal';
+import { TeamGenerator } from './components/TeamGenerator';
 import { useDatabase } from './hooks/useDatabase';
 
 function App() {
   const { players, matches, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch } = useDatabase();
   const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator'>('matches');
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+
+  const openPlayerModal = () => setIsPlayerModalOpen(true);
+  const closePlayerModal = () => setIsPlayerModalOpen(false);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -59,7 +64,15 @@ function App() {
 
         {activeTab === 'players' && (
           <>
-            <NewPlayerForm onAddPlayer={addPlayer} />
+            <div className="flex gap-4 md:flex-row flex-col w-full justify-between">
+              <button
+                onClick={openPlayerModal}
+                className="bg-emerald-600 text-white mb-6 p-6 rounded-lg shadow-md hover:bg-emerald-700"
+              >
+                Tabla Resumen
+              </button>
+              <NewPlayerForm onAddPlayer={addPlayer} />
+            </div>
             {players.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {players.map(player => (
@@ -97,12 +110,17 @@ function App() {
             </div>
           </>
         )}
+
+        {/* Player Summary Modal */}
+        {isPlayerModalOpen && (
+          <PlayerSummaryModal players={players} onClose={closePlayerModal} />
+        )}
       </main>
 
       {/* Footer */}
       <footer className="bg-gray-100 text-center text-sm text-gray-500 p-4">
         <div className="container mx-auto">
-          <p>Made with ❤️ by Jose26398</p>
+          <p>Made with 💚 by Jose26398</p>
           <a href="https://github.com/Jose26398/unigol" target="_blank" rel="noreferrer">
             <p className="text-emerald-600">View code on GitHub</p>
           </a>

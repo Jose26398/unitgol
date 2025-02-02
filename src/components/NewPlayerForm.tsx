@@ -18,7 +18,7 @@ export function NewPlayerForm({ onAddPlayer }: NewPlayerFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 w-full">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <UserPlus className="w-6 h-6 text-emerald-600" />
         Añadir nuevo jugador

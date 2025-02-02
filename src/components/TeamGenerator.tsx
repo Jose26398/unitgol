@@ -3,6 +3,7 @@ import { Users, Shuffle } from 'lucide-react';
 import { Player } from '../types';
 import { generateBalancedTeams } from '../utils/playerStats';
 import { PlayerCard } from './PlayerCard';
+import { ShareButton } from './ShareButton';
 
 interface TeamGeneratorProps {
   players: Player[];
@@ -35,13 +36,16 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
           <Users className="w-6 h-6 text-emerald-600" />
           <h2 className="text-xl font-semibold">Generador de Equipos</h2>
         </div>
-        <button
-          onClick={handleGenerateTeams}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
-        >
-          <Shuffle className="w-4 h-4" />
-          Generar Equipos
-        </button>
+        <div className='flex items-center gap-2'>
+          {teams && <ShareButton teams={teams} />}
+          <button
+            onClick={handleGenerateTeams}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+          >
+            <Shuffle className="w-4 h-4" />
+            Generar Equipos
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">
