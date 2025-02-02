@@ -37,6 +37,14 @@ export const calculateScore = (player: Player): number => {
 };
 
 /**
+ * Calculates the total score of a list of players.
+ * 
+ * @param players The players to calculate the total score for.
+ * @returns The total score of the players.
+ */
+export const totalScore = (players: Player[]): number => players.reduce((acc, player) => acc + calculateScore(player), 0);
+
+/**
  * Generates a balanced team based on the player's score.
  * 
  * @param players The players to generate the team from.
