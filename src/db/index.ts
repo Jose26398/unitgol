@@ -4,14 +4,25 @@ import { Player, Match } from '../types';
 export class FootballDatabase extends Dexie {
   players!: Table<Player>;
   matches!: Table<Match>;
+  settings!: Table<{ key: string; value: number }>;
 
   constructor() {
     super('FootballDB');
-    
-    this.version(1).stores({
+
+    this.version(2).stores({
       players: '++id, name',
-      matches: '++id, date'
+      matches: '++id, date',
+      settings: 'key'
     });
+  }
+
+  async getSetting(key: string): Promise<number | undefined> {
+    const setting = await this.settings.get(key);
+    return setting?.value;
+  }
+
+  async setSetting(key: string, value: number): Promise<void> {
+    await this.settings.put({ key, value });
   }
 
   async addPlayer(name: string): Promise<string> {

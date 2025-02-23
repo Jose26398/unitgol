@@ -16,7 +16,7 @@ export function PlayerSummaryModal({ players, onClose }: { players: Player[]; on
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div ref={modalRef} className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg">
+      <div ref={modalRef} className="bg-white p-6 rounded-lg w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-lg">
         <h2 className="text-xl font-bold mb-4 text-emerald-500">Resumen de Jugadores</h2>
         <table className="w-full text-sm">
           <thead>
@@ -63,7 +63,11 @@ export function PlayerSummaryModal({ players, onClose }: { players: Player[]; on
         </table>
         <div className="flex justify-between mt-6">
           <ShareButton players={players} />
-          <button onClick={onClose} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors" aria-label="Cerrar modal">
+          <button
+            onClick={onClose}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+            aria-label="Cerrar modal"
+          >
             Cerrar
           </button>
         </div>

@@ -1,9 +1,11 @@
+import { Settings } from 'lucide-react';
 import { useState } from 'react';
 import { MatchCard } from './components/MatchCard';
 import { NewMatchForm } from './components/NewMatchForm';
 import { NewPlayerForm } from './components/NewPlayerForm';
 import { PlayerCard } from './components/PlayerCard';
 import { PlayerSummaryModal } from './components/PlayerSummaryModal';
+import { SettingsModal } from './components/SettingsModal';
 import { TeamGenerator } from './components/TeamGenerator';
 import { useDatabase } from './hooks/useDatabase';
 
@@ -11,17 +13,27 @@ function App() {
   const { players, matches, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch } = useDatabase();
   const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator'>('matches');
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const openPlayerModal = () => setIsPlayerModalOpen(true);
   const closePlayerModal = () => setIsPlayerModalOpen(false);
+
+  const openSettingsModal = () => setIsSettingsModalOpen(true);
+  const closeSettingsModal = () => setIsSettingsModalOpen(false);
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-emerald-600 text-white p-4 shadow-md">
-        <div className="container mx-auto flex items-center gap-3">
-          <img src="/favicon.ico" className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">UnitGol</h1>
+        <div className="container mx-auto flex items-center gap-3 px-4">
+          <img src="/favicon.ico" className="w-8 h-8" alt="Logo" />
+          <h1 className="text-2xl font-bold flex-1">UnitGol</h1>
+          <button
+            className="bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700"
+            onClick={openSettingsModal}
+          >
+            <Settings className="w-6 h-6" />
+          </button>
         </div>
       </header>
 
@@ -114,6 +126,11 @@ function App() {
         {/* Player Summary Modal */}
         {isPlayerModalOpen && (
           <PlayerSummaryModal players={players} onClose={closePlayerModal} />
+        )}
+
+        {/* Settings Modal */}
+        {isSettingsModalOpen && (
+          <SettingsModal onClose={closeSettingsModal} />
         )}
       </main>
 

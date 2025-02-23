@@ -31,12 +31,12 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between mb-6 flex-col sm:flex-row gap-4 sm:gap-0">
+      <div className="flex justify-between mb-6 flex-col sm:flex-row gap-4">
         <div className="flex items-center gap-2">
           <Users className="w-6 h-6 text-emerald-600" />
           <h2 className="text-xl font-semibold">Generador de Equipos</h2>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-col-reverse gap-2 sm:flex-row'>
           {teams && <ShareButton teams={teams} />}
           <button
             onClick={handleGenerateTeams}

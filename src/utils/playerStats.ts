@@ -1,4 +1,23 @@
+import { db } from '../db';
 import { Player } from '../types';
+
+let goalScoreFactor = 10;
+let assistScoreFactor = 5;
+
+export const setScoreFactors = (goalFactor: number, assistFactor: number) => {
+  goalScoreFactor = goalFactor;
+  assistScoreFactor = assistFactor;
+};
+
+const loadScoreFactors = async () => {
+  const goal = await db.getSetting("goalScoreFactor");
+  const assist = await db.getSetting("assistScoreFactor");
+
+  goalScoreFactor = goal ?? 10;
+  assistScoreFactor = assist ?? 5;
+};
+
+loadScoreFactors();
 
 export const calculateWinRate = (player: Player): number => {
   if (player.matches === 0) return 0;
@@ -33,7 +52,7 @@ export const calculateScore = (player: Player): number => {
   const adjustedGoals = adjustForMatches(goalsPerGame, player.matches);
   const adjustedAssists = adjustForMatches(assistsPerGame, player.matches);
 
-  return adjustedWinRate * 0.7 + adjustedGoals * 10 + adjustedAssists * 5;
+  return adjustedWinRate * 0.7 + adjustedGoals * goalScoreFactor + adjustedAssists * assistScoreFactor;
 };
 
 /**
@@ -61,7 +80,7 @@ export const generateBalancedTeams = (players: Player[]): { teamA: Player[]; tea
   sortedPlayers.forEach((player) => {
     const playerScore = calculateScore(player);
     if (
-      (teamA.length < teamB.length) || 
+      (teamA.length < teamB.length) ||
       (teamA.length === teamB.length && scoreA <= scoreB)
     ) {
       teamA.push(player);
