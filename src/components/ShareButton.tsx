@@ -11,14 +11,17 @@ interface Props {
 }
 
 export function ShareButton({ players, teams }: Props) {
-  const generatePlayerSummary = (player: Player): string => {
+  const generatePlayerSummary = (player: Player, compact = false): string => {
     const { name, matches, wins, losses, goals, assists } = player;
     const draws = matches - wins - losses;
     const winRate = calculateWinRate(player);
     const goalsPerMatch = (goals / matches).toFixed(2);
     const assistsPerMatch = (assists / matches).toFixed(2);
 
-    return `- ${name} (🌟${calculateScore(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
+    if (compact) {
+      return `- ${name} (🌟${calculateScore(player).toFixed(2)})\n`;
+    }
+    return `- ${name} (🌟${calculateScore(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate.toFixed(2)}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
   };
 
   const generateShareableContent = (): string => {
@@ -32,11 +35,11 @@ export function ShareButton({ players, teams }: Props) {
     } else if (teams) {
       content += "Equipo A (Total: " + totalScore(teams.teamA).toFixed(2) + "):\n";
       teams.teamA.forEach(player => {
-        content += generatePlayerSummary(player);
+        content += generatePlayerSummary(player, true);
       });
       content += "\nEquipo B (Total: " + totalScore(teams.teamB).toFixed(2) + "):\n";
       teams.teamB.forEach(player => {
-        content += generatePlayerSummary(player);
+        content += generatePlayerSummary(player, true);
       });
     }
 

@@ -1,0 +1,7 @@
+<% if (process.env.VITE_ENV === 'develop') { %>
+User-agent: *
+Disallow: /
+<% } else { %>
+User-agent: *
+Allow: /
+<% } %>

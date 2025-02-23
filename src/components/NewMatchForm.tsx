@@ -67,12 +67,11 @@ export function NewMatchForm({ players, onAddMatch }: NewMatchFormProps) {
   const availablePlayers = players.filter(p => selectedPlayers.includes(p.id));
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg shadow-lg p-8">
-      <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2 mb-6">
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex items-center gap-2 mb-4">
         <Plus className="w-6 h-6 text-emerald-600" />
-        Añadir nuevo partido
-      </h2>
-
+        <h2 className="text-xl font-semibold">Añadir nuevo partido</h2>
+      </div>
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Team A Section */}
         <div>

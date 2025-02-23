@@ -1,22 +1,23 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "unitgol",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "generate-robots": "pnpx ejs-cli public/robots.txt.ejs -o .",
+    "build": "pnpm run generate-robots && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "date-fns": "^4.1.0",
+    "date-fns": "4.1.0",
     "dexie": "4.0.10",
     "dexie-react-hooks": "1.1.7",
     "lucide-react": "0.468.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "7.3.0"
   },
   "devDependencies": {
     "@eslint/js": "9.16.0",
@@ -33,10 +34,10 @@
     "typescript": "5.7.2",
     "typescript-eslint": "8.17.0",
     "vite": "6.0.3",
-    "vite-plugin-pwa": "^0.21.1",
-    "workbox-core": "^7.3.0",
-    "workbox-precaching": "^7.3.0",
-    "workbox-routing": "^7.3.0",
-    "workbox-strategies": "^7.3.0"
+    "vite-plugin-pwa": "0.21.1",
+    "workbox-core": "7.3.0",
+    "workbox-precaching": "7.3.0",
+    "workbox-routing": "7.3.0",
+    "workbox-strategies": "7.3.0"
   }
 }
