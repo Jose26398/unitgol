@@ -64,7 +64,7 @@ function App() {
         {/* Tab Content */}
         {activeTab === 'matches' && (
           <>
-            {matches.length <= 0 ? (
+            {matches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {matches.map(match => (
                   <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
