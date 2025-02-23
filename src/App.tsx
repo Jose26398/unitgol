@@ -63,15 +63,17 @@ function App() {
 
         {/* Tab Content */}
         {activeTab === 'matches' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {matches.length > 0 ? (
-              matches.map(match => (
-                <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
-              ))
+          <>
+            {matches.length <= 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {matches.map(match => (
+                  <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
+                ))}
+              </div>
             ) : (
               <div className="text-center text-gray-500">No hay partidos disponibles.</div>
             )}
-          </div>
+          </>
         )}
 
         {activeTab === 'players' && (
