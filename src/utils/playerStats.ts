@@ -71,25 +71,47 @@ export const totalScore = (players: Player[]): number => players.reduce((acc, pl
  */
 export const generateBalancedTeams = (players: Player[]): { teamA: Player[]; teamB: Player[] } => {
   const sortedPlayers = [...players].sort((a, b) => calculateScore(b) - calculateScore(a));
+  const totalPlayers = sortedPlayers.length;
+  const totalScore = sortedPlayers.reduce((sum, player) => sum + calculateScore(player), 0);
 
+  const teamsSize = Math.floor(totalPlayers / 2);
+  let bestDiff = Infinity;
+  let bestMask = 0;
+
+  // We iterate over all possible subsets with the correct size
+  const totalSubsets = 1 << totalPlayers;
+  for (let mask = 0; mask < totalSubsets; mask++) {
+    const subset: Player[] = [];
+    let subsetScore = 0;
+
+    for (let i = 0; i < totalPlayers; i++) {
+      if (mask & (1 << i)) {
+        subset.push(sortedPlayers[i]);
+        subsetScore += calculateScore(sortedPlayers[i]);
+      }
+    }
+
+    // Only consider subsets with the correct size
+    if (subset.length === teamsSize || subset.length === teamsSize + 1) {
+      const diff = Math.abs(totalScore - 2 * subsetScore);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestMask = mask;
+      }
+    }
+  }
+
+  // Build the teams from the best combination found
   const teamA: Player[] = [];
   const teamB: Player[] = [];
-  let scoreA = 0;
-  let scoreB = 0;
-
-  sortedPlayers.forEach((player) => {
-    const playerScore = calculateScore(player);
-    if (
-      (teamA.length < teamB.length) ||
-      (teamA.length === teamB.length && scoreA <= scoreB)
-    ) {
-      teamA.push(player);
-      scoreA += playerScore;
+  for (let i = 0; i < totalPlayers; i++) {
+    if (bestMask & (1 << i)) {
+      teamA.push(sortedPlayers[i]);
     } else {
-      teamB.push(player);
-      scoreB += playerScore;
+      teamB.push(sortedPlayers[i]);
     }
-  });
+  }
 
   return { teamA, teamB };
 };
+
