@@ -37,14 +37,11 @@ interface SeasonStatsProps {
   matches: Match[];
 }
 
-
 export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
-  // State
   const [detailChart, setDetailChart] = useState<ChartData<'bar' | 'line', number[], string> | null>(null);
   const [chartMode, setChartMode] = useState<'bar' | 'line'>('bar');
   const [chartStat, setChartStat] = useState<'matches' | 'goals' | 'assists'>('goals');
   const [selectedStat, setSelectedStat] = useState<{ stat: string, useLine: boolean }>({ stat: 'score', useLine: false });
-
 
   // Memoized data
   const seasonMatches = useMemo(() => matches.filter(m => m.seasonId === seasonId), [matches, seasonId]);
@@ -75,7 +72,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
     }), [players, seasonMatches]);
 
 
-  // Premios y estadísticas generales
+  // Awards and general stats
   const bestPlayer = useMemo(() => playerStats.reduce<Player | null>((b, p) => (!b || calculateScore(p) > calculateScore(b)) ? p : b, null), [playerStats]);
   const topScorer = useMemo(() => playerStats.reduce<Player | null>((b, p) => (!b || p.goals > b.goals) ? p : b, null), [playerStats]);
   const topAssistant = useMemo(() => playerStats.reduce<Player | null>((b, p) => (!b || p.assists > b.assists) ? p : b, null), [playerStats]);
@@ -85,17 +82,92 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
   const avgAssists = useMemo(() => seasonMatches.length ? (totalAssists / seasonMatches.length).toFixed(2) : '0', [totalAssists, seasonMatches.length]);
   const mostGames = useMemo(() => playerStats.reduce<Player | null>((b, p) => (!b || p.matches > b.matches) ? p : b, null), [playerStats]);
 
-  // Handler para cambiar el gráfico dinámico
+  // Handler to change the dynamic chart
   const onClickStat = useCallback((stat: string, useLine: boolean) => {
+    // Stacked/grouped bar: wins and losses by player
+    if (stat === 'winloss') {
+      setChartMode('bar');
+      setChartStat('matches');
+      setDetailChart({
+        labels: players.map(p => p.name),
+        datasets: [
+          {
+            label: 'Wins',
+            data: players.map(p => {
+              const ps = playerStats.find(x => x.id === p.id);
+              return ps ? ps.wins : 0;
+            }),
+            backgroundColor: 'rgba(34,197,94,0.7)'
+          },
+          {
+            label: 'Losses',
+            data: players.map(p => {
+              const ps = playerStats.find(x => x.id === p.id);
+              return ps ? ps.losses : 0;
+            }),
+            backgroundColor: 'rgba(239,68,68,0.7)'
+          }
+        ]
+      });
+      return;
+    }
+
+    // Bar: win percentage by player
+    if (stat === 'winratio') {
+      setChartMode('bar');
+      setChartStat('matches');
+      setDetailChart({
+        labels: players.map(p => p.name),
+        datasets: [
+          {
+            label: '% Wins',
+            data: players.map(p => {
+              const ps = playerStats.find(x => x.id === p.id);
+              return ps && ps.matches > 0 ? ((ps.wins / ps.matches) * 100) : 0;
+            }),
+            backgroundColor: 'rgba(132,204,22,0.7)'
+          }
+        ]
+      });
+      return;
+    }
+
+    // Line: evolution of accumulated score by player
+    if (stat === 'scoreEvolution') {
+      setChartMode('line');
+      setChartStat('goals');
+      setDetailChart({
+        labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
+        datasets: players.map((p, i) => {
+          let acc = 0;
+          return {
+            label: p.name,
+            data: matchesChrono.map(m => {
+              // Score for this match only
+              const goals = m.goals.filter(g => g.playerId === p.id).length;
+              const assists = m.goals.filter(g => g.assistById === p.id).length;
+              const played = m.teamA.players.some(pl => pl.id === p.id) || m.teamB.players.some(pl => pl.id === p.id);
+              const score = played ? calculateScore({ ...p, goals, assists, matches: 1, wins: 0, losses: 0 }) : 0;
+              acc += score;
+              return acc;
+            }),
+            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            tension: 0.3,
+          };
+        })
+      });
+      return;
+    }
     setSelectedStat({ stat, useLine });
-    // Bar chart: total partidos jugados por jugador
+    // Bar chart: total matches played by player
     if (stat === 'matches' && !useLine) {
       setChartMode('bar');
       setChartStat('matches');
       setDetailChart({
         labels: players.map(p => p.name),
         datasets: [{
-          label: 'Partidos jugados',
+          label: 'Matches played',
           data: players.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.matches : 0;
@@ -106,7 +178,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: acumulado de partidos jugados por jugador
+    // Line chart: accumulated matches played by player
     if ((stat === 'matches' && useLine) || stat === 'mostGames') {
       setChartMode('line');
       setChartStat('matches');
@@ -130,7 +202,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: acumulado de goles por jugador
+    // Line chart: accumulated goals by player
     if (stat === 'goals' && useLine) {
       setChartMode('line');
       setChartStat('goals');
@@ -153,14 +225,14 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Bar chart: total goles por jugador
+    // Bar chart: total goals by player
     if (stat === 'goals' && !useLine) {
       setChartMode('bar');
       setChartStat('goals');
       setDetailChart({
         labels: players.map(p => p.name),
         datasets: [{
-          label: 'Goles',
+          label: 'Goals',
           data: players.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.goals : 0;
@@ -171,7 +243,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: acumulado de asistencias por jugador
+    // Line chart: accumulated assists by player
     if (stat === 'assists' && useLine) {
       setChartMode('line');
       setChartStat('assists');
@@ -194,14 +266,14 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Bar chart: total asistencias por jugador
+    // Bar chart: total assists by player
     if (stat === 'assists' && !useLine) {
       setChartMode('bar');
       setChartStat('assists');
       setDetailChart({
         labels: players.map(p => p.name),
         datasets: [{
-          label: 'Asistencias',
+          label: 'Assists',
           data: players.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.assists : 0;
@@ -212,7 +284,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: promedio goles por partido por jugador
+    // Line chart: average goals per match by player
     if (stat === 'avgGoals') {
       setChartMode('line');
       setChartStat('goals');
@@ -240,7 +312,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: promedio asistencias por partido por jugador
+    // Line chart: average assists per match by player
     if (stat === 'avgAssists') {
       setChartMode('line');
       setChartStat('assists');
@@ -268,7 +340,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Line chart: score por partido por jugador (eficiencia)
+    // Line chart: score per match by player (efficiency)
     if (stat === 'efficiency') {
       setChartMode('line');
       setChartStat('goals');
@@ -289,7 +361,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       return;
     }
 
-    // Bar chart: score total por jugador (mejor jugador)
+    // Bar chart: total score by player (best player)
     if (stat === 'score') {
       setChartMode('bar');
       setChartStat('goals');
@@ -309,13 +381,13 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
   }, [players, playerStats, matchesChrono]);
 
 
-  // Selección por defecto: mejor jugador (score)
-  // Solo se ejecuta una vez al montar
+  // Default selection: best player (score)
+  // Only runs once on mount
   useState(() => {
     onClickStat('score', false);
   });
 
-  // dynamicData es solo detailChart
+  // dynamicData is just detailChart
   const dynamicData = detailChart;
 
 
@@ -387,6 +459,27 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
         titleClass="text-sky-600"
         stats={[
           {
+            icon: <BarChart2 className="text-orange-500" />,
+            label: 'Victorias/Derrotas',
+            value: '',
+            onValueClick: () => onClickStat('winloss', false),
+            highlight: selectedStat.stat === 'winloss',
+          },
+          {
+            icon: <Star className="text-lime-500" />,
+            label: '% Victorias',
+            value: '',
+            onValueClick: () => onClickStat('winratio', false),
+            highlight: selectedStat.stat === 'winratio',
+          },
+          {
+            icon: <TrendingUp className="text-yellow-500" />,
+            label: 'Evolución score',
+            value: '',
+            onValueClick: () => onClickStat('scoreEvolution', true),
+            highlight: selectedStat.stat === 'scoreEvolution',
+          },
+          {
             icon: <Goal className="text-emerald-400" />,
             label: 'Prom. goles/partido',
             value: avgGoals,
@@ -416,14 +509,14 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
           <div className="flex justify-between items-center mb-4">
             <h5 className="text-lg font-bold flex items-center gap-2">
               <BarChart2 className="w-5 h-5 text-emerald-500" />
-              {getChartTitle(chartMode, chartStat, detailChart, players)}
+              {getChartTitle(chartMode, chartStat, detailChart, players, selectedStat)}
             </h5>
           </div>
           <div style={{ minHeight: 400, height: 400, width: '100%', position: 'relative' }}>
             {chartMode === 'bar' ? (
-              detailChart && <Bar data={detailChart as import('chart.js').ChartData<'bar', number[], string>} options={{ responsive: true, maintainAspectRatio: false, layout: { padding: 0 }, plugins: { legend: { display: false }, title: { display: false } } }} height={400} />
+              detailChart && <Bar data={detailChart as import('chart.js').ChartData<'bar', number[], string>} options={{ responsive: true, maintainAspectRatio: false, layout: { padding: 0 }, plugins: { legend: { position: 'bottom' }, title: { display: false } } }} height={400} />
             ) : (
-              dynamicData && chartMode === 'line' && <Line data={dynamicData as unknown as import('chart.js').ChartData<'line', number[], string>} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
+              dynamicData && chartMode === 'line' && <Line data={dynamicData as unknown as import('chart.js').ChartData<'line', number[], string>} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
             )}
           </div>
         </div>
@@ -496,21 +589,29 @@ function StatCard({ icon, label, value, onValueClick, highlight }: StatCardProps
   );
 }
 
-// Utilidad para el título del gráfico
+// Utility for chart title
 function getChartTitle(
   chartMode: 'bar' | 'line',
   chartStat: 'matches' | 'goals' | 'assists',
   detailChart: ChartData<'bar' | 'line', number[], string> | null,
-  players: Player[]
+  players: Player[],
+  selectedStat?: { stat: string, useLine: boolean }
 ) {
-  if (chartMode === 'bar') return detailChart?.datasets?.[0].label || '';
-  if (chartStat === 'goals' && chartMode === 'line' && detailChart?.datasets?.length === players.length && detailChart?.datasets?.[0].label !== 'Score')
+  if (!detailChart) return '';
+  if (chartMode === 'bar') {
+    if (detailChart.datasets.length === 2 && detailChart.datasets[0].label === 'Victorias') return 'Victorias y derrotas por jugador';
+    if (detailChart.datasets[0].label === '% Victorias') return 'Porcentaje de victorias por jugador';
+    return detailChart.datasets[0].label || '';
+  }
+  if (chartStat === 'goals' && chartMode === 'line' && detailChart.datasets.length === players.length && detailChart.datasets[0].label !== 'Score')
     return 'Evolución de goles';
   if (chartStat === 'assists' && chartMode === 'line')
     return 'Evolución de asistencias';
   if (chartStat === 'matches' && chartMode === 'line')
     return 'Evolución de partidos jugados';
-  if (chartStat === 'goals' && chartMode === 'line' && detailChart?.datasets?.[0].label === 'Score')
+  if (selectedStat && selectedStat.stat === 'scoreEvolution')
+    return 'Evolución del score acumulado';
+  if (chartStat === 'goals' && chartMode === 'line' && detailChart.datasets[0].label === 'Score')
     return 'Jugador más eficiente';
   return '';
 }

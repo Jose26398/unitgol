@@ -69,19 +69,6 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
         <Plus className="w-6 h-6 text-emerald-600" />
         <h2 className="text-xl font-semibold">Añadir nuevo partido</h2>
       </div>
-      <div className="mb-4 flex gap-2 items-center">
-        <label className="font-semibold">Temporada:</label>
-        <select
-          className="border rounded p-2"
-          value={selectedSeasonId || ''}
-          onChange={e => setSelectedSeasonId(e.target.value || null)}
-        >
-          <option value="">Sin temporada</option>
-          {seasons.map(season => (
-            <option key={season.id} value={season.id}>{season.name}</option>
-          ))}
-        </select>
-      </div>
       <div className="grid lg:grid-cols-3 gap-8">
         <TeamSelector
           team="A"
@@ -103,6 +90,19 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
         />
         <div>
           <MatchDateInput matchDate={matchDate} setMatchDate={setMatchDate} />
+          <div className="mb-4 flex gap-2 items-center">
+            <label className="text-gray-700 font-semibold">Temporada:</label>
+            <select
+              className="border rounded p-2"
+              value={selectedSeasonId || ''}
+              onChange={e => setSelectedSeasonId(e.target.value || null)}
+            >
+              <option value="">Sin temporada</option>
+              {seasons.map(season => (
+                <option key={season.id} value={season.id}>{season.name}</option>
+              ))}
+            </select>
+          </div>
           <GoalsSection
             goals={goals}
             players={players}

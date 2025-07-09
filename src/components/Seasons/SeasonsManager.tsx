@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Season } from '../../types';
+import { Edit, Trash2 } from 'lucide-react';
+import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 
 interface SeasonsManagerProps {
   seasons: Season[];
@@ -14,6 +16,7 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Omit<Season, 'id'>>({ name: '', startDate: '', endDate: '' });
   const [editId, setEditId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +81,25 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
               <div className="font-semibold">{season.name}</div>
               <div className="text-sm text-gray-500">{season.startDate} {season.endDate ? `- ${season.endDate}` : ''}</div>
             </div>
-            <div className="flex gap-2">
-              <button className="text-emerald-600" onClick={e => { e.stopPropagation(); handleEdit(season); }}>Editar</button>
-              <button className="text-red-500" onClick={e => { e.stopPropagation(); onDeleteSeason(season.id); }}>Eliminar</button>
+            <div className="flex gap-4 mr-4">
+              <button className="text-emerald-600" onClick={e => { e.stopPropagation(); handleEdit(season); }}>
+                <Edit className="inline-block w-5 h-5" />
+              </button>
+              <button className="text-red-500" onClick={e => { e.stopPropagation(); setDeleteId(season.id); }}>
+                <Trash2 className="inline-block w-5 h-5" />
+              </button>
+      <ConfirmDeleteModal
+        open={!!deleteId}
+        title="¿Eliminar temporada?"
+        message="¿Estás seguro de que deseas eliminar esta temporada? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) onDeleteSeason(deleteId);
+          setDeleteId(null);
+        }}
+      />
             </div>
           </li>
         ))}
