@@ -1,46 +1,48 @@
-import { User, Trash2, Edit } from 'lucide-react'
-import { useState } from 'react'
-import { Player } from '../types'
-import { calculateWinRate, calculateScore } from '../utils/playerStats'
+import { User, Trash2, Edit } from 'lucide-react';
+import { useState } from 'react';
+import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
+import { Player } from '../../types';
+import { calculateWinRate, calculateScore } from '../../utils/playerStats';
 
 interface PlayerCardProps {
-  player: Player
-  onDelete?: (id: string) => void
-  onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void
+  player: Player;
+  onDelete?: (id: string) => void;
+  onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void;
 }
 
-export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<Omit<Player, 'id'>>>({
     name: player.name,
     matches: player.matches,
     goals: player.goals,
-    assists: player.assists
-  })
+    assists: player.assists,
+  });
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  const winRate = calculateWinRate(player)
-  const score = calculateScore(player)
+  const winRate = calculateWinRate(player);
+  const score = calculateScore(player);
 
   const handleEdit = () => {
-    setIsEditing(true)
-  }
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(player.id, editedData)
+      onEdit(player.id, editedData);
     }
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
   const handleCancel = () => {
     setEditedData({
       name: player.name,
       matches: player.matches,
       goals: player.goals,
-      assists: player.assists
-    })
-    setIsEditing(false)
-  }
+      assists: player.assists,
+    });
+    setIsEditing(false);
+  };
 
   return (
     <div className='bg-white rounded-lg shadow-md p-5 hover:shadow-xl transition-shadow'>
@@ -63,7 +65,7 @@ export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
           )}
           {onDelete && (
             <button
-              onClick={() => onDelete(player.id)}
+              onClick={() => setDeleteConfirm(true)}
               className='rounded-full text-red-600 hover:text-red-200 transition-colors'
               title='Eliminar jugador'
               aria-label='Eliminar jugador'
@@ -109,7 +111,7 @@ export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
 
       {/* Modal for editing */}
       {isEditing && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
           <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
             <h2 className='text-xl font-semibold mb-4'>Edit Player</h2>
             <form className='space-y-3'>
@@ -183,6 +185,19 @@ export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={deleteConfirm}
+        title="¿Eliminar jugador?"
+        message="¿Estás seguro de que deseas eliminar este jugador? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onCancel={() => setDeleteConfirm(false)}
+        onConfirm={() => {
+          if (onDelete) onDelete(player.id);
+          setDeleteConfirm(false);
+        }}
+      />
     </div>
-  )
+  );
 }
