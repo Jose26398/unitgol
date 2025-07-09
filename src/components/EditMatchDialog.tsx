@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { Match } from '../types';
+import { Match, Season } from '../types';
 import { GoalEntry } from './GoalEntry';
+import { SeasonSelector } from './Seasons/SeasonSelector';
 
 interface EditMatchDialogProps {
   match: Match;
   onSave: (match: Match) => void;
   onClose: () => void;
+  seasons: Season[];
 }
 
-export function EditMatchDialog({ match, onSave, onClose }: EditMatchDialogProps) {
+export function EditMatchDialog({ match, onSave, onClose, seasons }: EditMatchDialogProps) {
   const [date, setDate] = useState(match.date.split('T')[0]);
   const [teamAScore, setTeamAScore] = useState(match.teamA.score);
   const [teamBScore, setTeamBScore] = useState(match.teamB.score);
   const [goals, setGoals] = useState(match.goals);
+  const [seasonId, setSeasonId] = useState<string | null>(match.seasonId || null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       ...match,
       date: new Date(date).toISOString(),
+      seasonId: seasonId || undefined,
       teamA: {
         ...match.teamA,
         score: teamAScore
@@ -56,6 +60,13 @@ export function EditMatchDialog({ match, onSave, onClose }: EditMatchDialogProps
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <SeasonSelector
+              seasons={seasons}
+              selectedSeasonId={seasonId}
+              onSelect={setSeasonId}
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fecha

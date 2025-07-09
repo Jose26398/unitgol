@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { UserPlus } from 'lucide-react';
-import { Player } from '../types';
+import { Player } from '../../types';
 
 interface NewPlayerFormProps {
   onAddPlayer: (player: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'>) => void;

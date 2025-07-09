@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { ShareButton } from "../components/ShareButton";
-import { Player } from "../types";
-import { calculateScore, calculateWinRate } from "../utils/playerStats";
+import { ShareButton } from '../ShareButton';
+import { Player } from '../../types';
+import { calculateScore, calculateWinRate } from '../../utils/playerStats';
 
 export function PlayerSummaryModal({ players, onClose }: { players: Player[]; onClose: () => void }) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -39,7 +39,7 @@ export function PlayerSummaryModal({ players, onClose }: { players: Player[]; on
                   <td className="py-2 truncate max-w-[70px]" title={player.name}>
                     {player.name}
                     <br />
-                    <span className="text-xs text-gray-500">⭐{calculateScore(player).toFixed(2)}</span>
+                    <span className="text-xs text-gray-500">★{calculateScore(player).toFixed(2)}</span>
                   </td>
                   <td className="py-2">
                     <span>V: {player.wins}, E: {draws}, D: {player.losses}</span>
@@ -74,4 +74,4 @@ export function PlayerSummaryModal({ players, onClose }: { players: Player[]; on
       </div>
     </div>
   );
-};
+}

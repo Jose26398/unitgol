@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Users, Shuffle } from 'lucide-react';
-import { Player } from '../types';
-import { generateBalancedTeams } from '../utils/playerStats';
-import { PlayerCard } from './PlayerCard';
-import { ShareButton } from './ShareButton';
+import { Player } from '../../types';
+import { generateBalancedTeams } from '../../utils/playerStats';
+import { PlayerCard } from '../Players/PlayerCard';
+import { ShareButton } from '../ShareButton';
 
 interface TeamGeneratorProps {
   players: Player[];

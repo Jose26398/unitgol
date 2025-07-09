@@ -1,46 +1,46 @@
-import { User, Trash2, Edit } from 'lucide-react'
-import { useState } from 'react'
-import { Player } from '../types'
-import { calculateWinRate, calculateScore } from '../utils/playerStats'
+import { User, Trash2, Edit } from 'lucide-react';
+import { useState } from 'react';
+import { Player } from '../../types';
+import { calculateWinRate, calculateScore } from '../../utils/playerStats';
 
 interface PlayerCardProps {
-  player: Player
-  onDelete?: (id: string) => void
-  onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void
+  player: Player;
+  onDelete?: (id: string) => void;
+  onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void;
 }
 
-export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<Omit<Player, 'id'>>>({
     name: player.name,
     matches: player.matches,
     goals: player.goals,
-    assists: player.assists
-  })
+    assists: player.assists,
+  });
 
-  const winRate = calculateWinRate(player)
-  const score = calculateScore(player)
+  const winRate = calculateWinRate(player);
+  const score = calculateScore(player);
 
   const handleEdit = () => {
-    setIsEditing(true)
-  }
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(player.id, editedData)
+      onEdit(player.id, editedData);
     }
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
   const handleCancel = () => {
     setEditedData({
       name: player.name,
       matches: player.matches,
       goals: player.goals,
-      assists: player.assists
-    })
-    setIsEditing(false)
-  }
+      assists: player.assists,
+    });
+    setIsEditing(false);
+  };
 
   return (
     <div className='bg-white rounded-lg shadow-md p-5 hover:shadow-xl transition-shadow'>
@@ -184,5 +184,5 @@ export function PlayerCard ({ player, onDelete, onEdit }: PlayerCardProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

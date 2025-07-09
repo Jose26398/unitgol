@@ -1,10 +1,23 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Player, Match } from '../types';
+import { Player, Match, Season } from '../types';
 
 export function useDatabase() {
   const players = useLiveQuery(() => db.getAllPlayers()) || [];
   const matches = useLiveQuery(() => db.getAllMatches()) || [];
+  const seasons = useLiveQuery(() => db.getAllSeasons()) || [];
+  // Season CRUD
+  const addSeason = async (season: Omit<Season, 'id'>) => {
+    return await db.addSeason(season);
+  };
+
+  const editSeason = async (season: Season) => {
+    await db.updateSeason(season);
+  };
+
+  const deleteSeason = async (id: string) => {
+    await db.deleteSeason(id);
+  };
 
   const addPlayer = async (newPlayer: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'>) => {
     return await db.addPlayer(newPlayer.name);
@@ -23,16 +36,16 @@ export function useDatabase() {
 
     // Update player stats
     const allPlayers = [...newMatch.teamA.players, ...newMatch.teamB.players];
-    
+
     for (const player of allPlayers) {
       const isTeamA = newMatch.teamA.players.some(p => p.id === player.id);
       const currentStats = await db.players.get(player.id);
-      
+
       if (currentStats) {
-        const wins = isTeamA ? 
+        const wins = isTeamA ?
           (newMatch.teamA.score > newMatch.teamB.score ? currentStats.wins + 1 : currentStats.wins) :
           (newMatch.teamB.score > newMatch.teamA.score ? currentStats.wins + 1 : currentStats.wins);
-        
+
         const losses = isTeamA ?
           (newMatch.teamA.score < newMatch.teamB.score ? currentStats.losses + 1 : currentStats.losses) :
           (newMatch.teamB.score < newMatch.teamA.score ? currentStats.losses + 1 : currentStats.losses);
@@ -78,16 +91,16 @@ export function useDatabase() {
   const updatePlayerStatsForMatch = async (match: Omit<Match, 'id'>, revert: boolean = false) => {
     const multiplier = revert ? -1 : 1;
     const allPlayers = [...match.teamA.players, ...match.teamB.players];
-    
+
     for (const player of allPlayers) {
       const isTeamA = match.teamA.players.some(p => p.id === player.id);
       const currentStats = await db.players.get(player.id);
-      
+
       if (currentStats) {
-        const wins = isTeamA ? 
+        const wins = isTeamA ?
           (match.teamA.score > match.teamB.score ? currentStats.wins + multiplier : currentStats.wins) :
           (match.teamB.score > match.teamA.score ? currentStats.wins + multiplier : currentStats.wins);
-        
+
         const losses = isTeamA ?
           (match.teamA.score < match.teamB.score ? currentStats.losses + multiplier : currentStats.losses) :
           (match.teamB.score < match.teamA.score ? currentStats.losses + multiplier : currentStats.losses);
@@ -109,11 +122,15 @@ export function useDatabase() {
   return {
     players,
     matches,
+    seasons,
     addPlayer,
     editPlayer,
     deletePlayer,
     addMatch,
     editMatch,
     deleteMatch,
+    addSeason,
+    editSeason,
+    deleteSeason,
   };
 }
