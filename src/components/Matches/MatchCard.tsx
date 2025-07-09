@@ -2,8 +2,10 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar, Edit, Trash2, Trophy } from 'lucide-react';
 import { useState } from 'react';
-import { Match } from '../types';
-import { EditMatchDialog } from './EditMatchDialog';
+import { Match } from '../../types';
+import { EditMatchDialog } from '../EditMatchDialog';
+import { useDatabase } from '../../hooks/useDatabase';
+
 
 interface MatchCardProps {
   match: Match;
@@ -14,6 +16,7 @@ interface MatchCardProps {
 export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { seasons } = useDatabase();
 
   const handleEdit = (updatedMatch: Match) => {
     onEdit(updatedMatch);
@@ -56,6 +59,16 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         </div>
       </div>
 
+      {/* Edit Match Dialog */}
+      {isEditing && (
+        <EditMatchDialog
+          match={match}
+          onClose={() => setIsEditing(false)}
+          onSave={handleEdit}
+          seasons={seasons}
+        />
+      )}
+
       {/* Match Details */}
       <div className="grid grid-cols-3 gap-6 align-top">
         {/* Team A */}
@@ -97,14 +110,6 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
             ))}
           </div>
         </div>
-      )}
-
-      {isEditing && (
-        <EditMatchDialog
-          match={match}
-          onSave={handleEdit}
-          onClose={() => setIsEditing(false)}
-        />
       )}
     </div>
   );

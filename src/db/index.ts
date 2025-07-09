@@ -1,19 +1,46 @@
 import Dexie, { Table } from 'dexie';
-import { Player, Match } from '../types';
+import { Player, Match, Season } from '../types';
 
 export class FootballDatabase extends Dexie {
   players!: Table<Player>;
   matches!: Table<Match>;
+  seasons!: Table<Season>;
   settings!: Table<{ key: string; value: number }>;
 
   constructor() {
     super('FootballDB');
 
-    this.version(2).stores({
+    this.version(3).stores({
       players: '++id, name',
-      matches: '++id, date',
+      matches: '++id, date, seasonId',
+      seasons: '++id, name, startDate',
       settings: 'key'
     });
+  }
+
+  // Season methods
+  async addSeason(season: Omit<Season, 'id'>): Promise<string> {
+    const id = await this.seasons.add({
+      id: Date.now().toString(),
+      ...season
+    });
+    return id.toString();
+  }
+
+  async updateSeason(season: Season): Promise<void> {
+    await this.seasons.update(season.id, season);
+  }
+
+  async deleteSeason(id: string): Promise<void> {
+    await this.seasons.delete(id);
+  }
+
+  async getAllSeasons(): Promise<Season[]> {
+    return await this.seasons.orderBy('startDate').reverse().toArray();
+  }
+
+  async getSeasonById(id: string): Promise<Season | undefined> {
+    return await this.seasons.get(id);
   }
 
   async getSetting(key: string): Promise<number | undefined> {

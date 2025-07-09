@@ -1,19 +1,23 @@
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
-import { MatchCard } from './components/MatchCard';
-import { NewMatchForm } from './components/NewMatchForm';
-import { NewPlayerForm } from './components/NewPlayerForm';
-import { PlayerCard } from './components/PlayerCard';
-import { PlayerSummaryModal } from './components/PlayerSummaryModal';
+import { MatchCard } from './components/Matches/MatchCard';
+import { NewMatchForm } from './components/NewMatch/NewMatchForm';
+import { NewPlayerForm } from './components/Players/NewPlayerForm';
+import { PlayerCard } from './components/Players/PlayerCard';
+import { PlayerSummaryModal } from './components/Matches/PlayerSummaryModal';
 import { SettingsModal } from './components/SettingsModal';
-import { TeamGenerator } from './components/TeamGenerator';
+import { TeamGenerator } from './components/TeamGenerator/TeamGenerator';
 import { useDatabase } from './hooks/useDatabase';
+import { SeasonsManager } from './components/Seasons/SeasonsManager';
+import { SeasonSelector } from './components/Seasons/SeasonSelector';
+import { SeasonStats } from './components/Seasons/SeasonStats';
 
 function App() {
-  const { players, matches, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch } = useDatabase();
-  const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator'>('matches');
+  const { players, matches, seasons, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch, addSeason, editSeason, deleteSeason } = useDatabase();
+  const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator' | 'seasons'>('seasons');
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
   const openPlayerModal = () => setIsPlayerModalOpen(true);
   const closePlayerModal = () => setIsPlayerModalOpen(false);
@@ -42,6 +46,7 @@ function App() {
         {/* Tab Navigation */}
         <nav className="flex gap-4 mb-8 overflow-x-auto border-b border-gray-300">
           {[
+            { label: 'Temporadas', value: 'seasons' },
             { label: 'Partidos', value: 'matches' },
             { label: 'Jugadores', value: 'players' },
             { label: 'Nueva Jornada', value: 'newMatch' },
@@ -49,7 +54,7 @@ function App() {
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setActiveTab(tab.value as 'matches' | 'players' | 'generator')}
+              onClick={() => setActiveTab(tab.value as typeof activeTab)}
               className={`relative px-4 py-2 font-semibold text-lg text-ellipsis whitespace-nowrap rounded-md ${activeTab === tab.value
                 ? 'text-emerald-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-emerald-600'
                 : 'text-gray-500 hover:text-emerald-600'
@@ -62,11 +67,32 @@ function App() {
         </nav>
 
         {/* Tab Content */}
+        {activeTab === 'seasons' && (
+          <>
+            <SeasonsManager
+              seasons={seasons}
+              onAddSeason={addSeason}
+              onEditSeason={editSeason}
+              onDeleteSeason={deleteSeason}
+              selectedSeasonId={selectedSeasonId}
+              onSelectSeason={setSelectedSeasonId}
+            />
+            {selectedSeasonId && (
+              <SeasonStats seasonId={selectedSeasonId} players={players} matches={matches} />
+            )}
+          </>
+        )}
+
         {activeTab === 'matches' && (
           <>
-            {matches.length > 0 ? (
+            <SeasonSelector
+              seasons={seasons}
+              selectedSeasonId={selectedSeasonId}
+              onSelect={setSelectedSeasonId}
+            />
+            {(matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {matches.map(match => (
+                {matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).map(match => (
                   <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
                 ))}
               </div>
@@ -107,7 +133,7 @@ function App() {
         {activeTab === 'newMatch' && (
           <>
             <div className="space-y-6">
-              <NewMatchForm players={players} onAddMatch={addMatch} />
+              <NewMatchForm players={players} onAddMatch={addMatch} seasons={seasons} />
             </div>
           </>
         )}
