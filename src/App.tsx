@@ -111,16 +111,22 @@ function App() {
               >
                 Tabla Resumen
               </button>
-              <NewPlayerForm onAddPlayer={addPlayer} />
+              <NewPlayerForm onAddPlayer={addPlayer} seasons={seasons} selectedSeasonId={selectedSeasonId} />
             </div>
-            {players.length > 0 ? (
+            <SeasonSelector
+              seasons={seasons}
+              selectedSeasonId={selectedSeasonId}
+              onSelect={setSelectedSeasonId}
+            />
+            {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {players.map(player => (
+                {players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).map(player => (
                   <PlayerCard
                     key={player.id}
                     player={player}
                     onEdit={editPlayer}
                     onDelete={deletePlayer}
+                    seasons={seasons}
                   />
                 ))}
               </div>
@@ -141,12 +147,16 @@ function App() {
         {activeTab === 'generator' && (
           <>
             <div className="space-y-6">
-              {players.length > 0 ? (
-                <TeamGenerator players={players} />
+              <SeasonSelector
+                seasons={seasons}
+                selectedSeasonId={selectedSeasonId}
+                onSelect={setSelectedSeasonId}
+              />
+              {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
+                <TeamGenerator players={players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId)} />
               ) : (
                 <div className="text-center text-gray-500">No hay jugadores disponibles.</div>
-              )
-              }
+              )}
             </div>
           </>
         )}
