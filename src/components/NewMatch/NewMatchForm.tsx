@@ -1,20 +1,19 @@
 import { Plus } from 'lucide-react';
-import { Player, Match, Season } from '../../types';
+import type { Player, Match } from '../../types';
 import { useNewMatchForm } from '../../hooks/useNewMatchForm';
 import { TeamSelector } from './TeamSelector';
 import { MatchDateInput } from './MatchDateInput';
 import { GoalsSection } from './GoalsSection';
-import { SeasonSelector } from '../Seasons/SeasonSelector';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+
 
 interface NewMatchFormProps {
   players: Player[];
   onAddMatch: (match: Omit<Match, 'id'>) => void;
-  seasons: Season[];
+  selectedSeasonId: string | null;
 }
 
-export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps) {
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+export function NewMatchForm({ players, onAddMatch, selectedSeasonId }: NewMatchFormProps) {
   const filteredPlayers = useMemo(() =>
     players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId),
     [players, selectedSeasonId]
@@ -60,7 +59,6 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
     setTeamAScore(null);
     setTeamBScore(null);
     setGoals([]);
-    setSelectedSeasonId(null);
   };
 
   return (
@@ -69,11 +67,6 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
         <Plus className="w-6 h-6 text-emerald-600" />
         <h2 className="text-xl font-semibold">Añadir nuevo partido</h2>
       </div>
-      <SeasonSelector
-        seasons={seasons}
-        selectedSeasonId={selectedSeasonId}
-        onSelect={setSelectedSeasonId}
-      />
       <div className="grid lg:grid-cols-3 gap-8">
         <TeamSelector
           team="A"

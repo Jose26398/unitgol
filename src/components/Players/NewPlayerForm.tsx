@@ -1,26 +1,20 @@
 
 import { useState } from 'react';
 import { UserPlus } from 'lucide-react';
-import { Player, Season } from '../../types';
+import { Player } from '../../types';
 
 interface NewPlayerFormProps {
   onAddPlayer: (player: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'> & { seasonId: string }) => void;
-  seasons: Season[];
   selectedSeasonId: string | null;
 }
 
-export function NewPlayerForm({ onAddPlayer, seasons, selectedSeasonId }: NewPlayerFormProps) {
+export function NewPlayerForm({ onAddPlayer, selectedSeasonId }: NewPlayerFormProps) {
   const [name, setName] = useState('');
-  const [seasonId, setSeasonId] = useState<string>(selectedSeasonId || (seasons[0]?.id ?? ''));
-
-  if (selectedSeasonId && seasonId !== selectedSeasonId) {
-    setSeasonId(selectedSeasonId);
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && seasonId) {
-      onAddPlayer({ name: name.trim(), seasonId });
+    if (name.trim() && selectedSeasonId) {
+      onAddPlayer({ name: name.trim(), seasonId: selectedSeasonId });
       setName('');
     }
   };
@@ -40,17 +34,6 @@ export function NewPlayerForm({ onAddPlayer, seasons, selectedSeasonId }: NewPla
           className="flex-1 border rounded-md p-2"
           required
         />
-        <select
-          value={seasonId}
-          onChange={e => setSeasonId(e.target.value)}
-          className="border rounded-md p-2"
-          required
-        >
-          <option value="" disabled>Selecciona temporada</option>
-          {seasons.map(season => (
-            <option key={season.id} value={season.id}>{season.name}</option>
-          ))}
-        </select>
         <button
           type="submit"
           className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"

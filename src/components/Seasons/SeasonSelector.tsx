@@ -9,10 +9,10 @@ interface SeasonSelectorProps {
 
 export const SeasonSelector: React.FC<SeasonSelectorProps> = ({ seasons, selectedSeasonId, onSelect }) => {
   return (
-    <div className="mb-4 flex gap-2 items-center">
-      <label className="font-semibold">Temporada:</label>
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-700">Temporada:</label>
       <select
-        className="border rounded p-2"
+        className="w-full rounded p-2"
         value={selectedSeasonId || ''}
         onChange={e => onSelect(e.target.value || null)}
       >
