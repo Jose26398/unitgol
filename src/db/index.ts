@@ -10,8 +10,8 @@ export class FootballDatabase extends Dexie {
   constructor() {
     super('FootballDB');
 
-    this.version(3).stores({
-      players: '++id, name',
+    this.version(4).stores({
+      players: '++id, name, seasonId',
       matches: '++id, date, seasonId',
       seasons: '++id, name, startDate',
       settings: 'key'
@@ -52,7 +52,8 @@ export class FootballDatabase extends Dexie {
     await this.settings.put({ key, value });
   }
 
-  async addPlayer(name: string): Promise<string> {
+
+  async addPlayer(name: string, seasonId: string): Promise<string> {
     const id = await this.players.add({
       id: Date.now().toString(), // Simple unique ID generation
       name,
@@ -60,7 +61,8 @@ export class FootballDatabase extends Dexie {
       wins: 0,
       losses: 0,
       goals: 0,
-      assists: 0
+      assists: 0,
+      seasonId
     });
     return id.toString();
   }
@@ -94,7 +96,8 @@ export class FootballDatabase extends Dexie {
   }
 
   async updateMatch(match: Match): Promise<void> {
-    await this.matches.update(match.id, match);
+    const { id, ...changes } = match;
+    await this.matches.update(id, changes);
   }
 
   async deleteMatch(id: string): Promise<void> {

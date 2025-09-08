@@ -6,6 +6,7 @@ export interface Player {
   losses: number;
   goals: number;
   assists: number;
+  seasonId: string;
 }
 
 export interface Match {

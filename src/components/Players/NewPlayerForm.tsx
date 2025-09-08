@@ -1,18 +1,20 @@
+
 import { useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Player } from '../../types';
 
 interface NewPlayerFormProps {
-  onAddPlayer: (player: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'>) => void;
+  onAddPlayer: (player: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'> & { seasonId: string }) => void;
+  selectedSeasonId: string | null;
 }
 
-export function NewPlayerForm({ onAddPlayer }: NewPlayerFormProps) {
+export function NewPlayerForm({ onAddPlayer, selectedSeasonId }: NewPlayerFormProps) {
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      onAddPlayer({ name: name.trim() });
+    if (name.trim() && selectedSeasonId) {
+      onAddPlayer({ name: name.trim(), seasonId: selectedSeasonId });
       setName('');
     }
   };
