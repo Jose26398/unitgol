@@ -1,10 +1,62 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type PlayerRow = {
+  id: string;
+  name: string;
+  matches: number;
+  wins: number;
+  losses: number;
+  goals: number;
+  assists: number;
+  season_id: string | null;
+  created_at: string;
+};
+
+export type MatchRow = {
+  id: string;
+  date: string;
+  season_id: string | null;
+  team_a_score: number;
+  team_b_score: number;
+  created_at: string;
+};
+
+export type MatchPlayerRow = {
+  id: string;
+  match_id: string;
+  player_id: string;
+  team: 'A' | 'B';
+  created_at: string;
+  players?: PlayerRow;
+};
+
+export type GoalRow = {
+  id: string;
+  match_id: string;
+  player_id: string;
+  assist_by_id: string | null;
+  minute: number;
+  created_at: string;
+};
+
+export type SeasonRow = {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string | null;
+  created_at: string;
+};
+
+export type SettingRow = {
+  key: string;
+  value: number;
+  created_at: string;
+};
+
+export type MatchWithRelations = MatchRow & {
+  match_players: (MatchPlayerRow & {
+    players: PlayerRow;
+  })[];
+  goals: GoalRow[];
+};
 
 export interface Database {
   public: {

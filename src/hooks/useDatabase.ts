@@ -68,41 +68,17 @@ export function useDatabase() {
 
   const addMatch = async (newMatch: Omit<Match, 'id'>) => {
     const matchId = await db.addMatch(newMatch);
-
-    // Update player stats
-    const allPlayers = [...newMatch.teamA.players, ...newMatch.teamB.players];
-
-    for (const player of allPlayers) {
-      const isTeamA = newMatch.teamA.players.some(p => p.id === player.id);
-      const currentStats = await db.players.get(player.id);
-
-      if (currentStats) {
-        const wins = isTeamA ?
-          (newMatch.teamA.score > newMatch.teamB.score ? currentStats.wins + 1 : currentStats.wins) :
-          (newMatch.teamB.score > newMatch.teamA.score ? currentStats.wins + 1 : currentStats.wins);
-
-        const losses = isTeamA ?
-          (newMatch.teamA.score < newMatch.teamB.score ? currentStats.losses + 1 : currentStats.losses) :
-          (newMatch.teamB.score < newMatch.teamA.score ? currentStats.losses + 1 : currentStats.losses);
-
-        const goals = currentStats.goals + newMatch.goals.filter(g => g.playerId === player.id).length;
-        const assists = currentStats.assists + newMatch.goals.filter(g => g.assistById === player.id).length;
-
-        await db.updatePlayerStats(player.id, {
-          matches: currentStats.matches + 1,
-          wins,
-          losses,
-          goals,
-          assists,
-        });
-      }
-    }
-
+    await updatePlayerStatsForMatch(newMatch);
+    
+    // Actualizar el estado local
+    const match = { id: matchId, ...newMatch };
+    setMatches(prev => [match, ...prev]);
+    
     return matchId;
   };
 
   const editMatch = async (updatedMatch: Match) => {
-    const oldMatch = await db.getMatchById(updatedMatch.id);
+    const oldMatch = await db.getMatch(updatedMatch.id);
 
     if (!oldMatch) {
       throw new Error(`Match with ID ${updatedMatch.id} not found`);
@@ -113,7 +89,10 @@ export function useDatabase() {
     // Apply new match stats
     await updatePlayerStatsForMatch(updatedMatch);
     // Save updated match
-    await db.updateMatch(updatedMatch);
+    await db.editMatch(updatedMatch);
+    
+    // Actualizar estado local
+    setMatches((prev: Match[]) => prev.map(m => m.id === updatedMatch.id ? updatedMatch : m));
   };
 
   const deleteMatch = async (match: Match) => {
@@ -121,6 +100,8 @@ export function useDatabase() {
     await updatePlayerStatsForMatch(match, true);
     // Delete match
     await db.deleteMatch(match.id);
+    // Actualizar estado local
+    setMatches((prev: Match[]) => prev.filter(m => m.id !== match.id));
   };
 
   const updatePlayerStatsForMatch = async (match: Omit<Match, 'id'>, revert: boolean = false) => {
@@ -128,8 +109,8 @@ export function useDatabase() {
     const allPlayers = [...match.teamA.players, ...match.teamB.players];
 
     for (const player of allPlayers) {
-      const isTeamA = match.teamA.players.some(p => p.id === player.id);
-      const currentStats = players.find(p => p.id === player.id);
+      const isTeamA = match.teamA.players.some((p: Player) => p.id === player.id);
+      const currentStats = players.find((p: Player) => p.id === player.id);
 
       if (currentStats) {
         const wins = isTeamA ?
@@ -151,7 +132,7 @@ export function useDatabase() {
           assists,
         });
 
-        setPlayers(prev => prev.map(p => p.id === player.id ? {
+        setPlayers((prev: Player[]) => prev.map((p: Player) => p.id === player.id ? {
           ...p,
           matches: currentStats.matches + multiplier,
           wins,

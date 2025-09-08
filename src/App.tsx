@@ -1,5 +1,5 @@
 import { Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MatchCard } from './components/Matches/MatchCard';
 import { NewMatchForm } from './components/NewMatch/NewMatchForm';
 import { NewPlayerForm } from './components/Players/NewPlayerForm';
@@ -8,6 +8,9 @@ import { PlayerSummaryModal } from './components/Matches/PlayerSummaryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { TeamGenerator } from './components/TeamGenerator/TeamGenerator';
 import { useDatabase } from './hooks/useDatabase';
+import type { Season, Match, Player } from './types';
+import { SeasonStats } from './components/Seasons/SeasonStats';
+import { SeasonsManager } from './components/Seasons/SeasonsManager';
 
 function App() {
   const { players, matches, seasons, loading, error, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch, addSeason, editSeason, deleteSeason } = useDatabase();
@@ -15,6 +18,14 @@ function App() {
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+
+  // Seleccionar la última temporada activa por defecto
+  useEffect(() => {
+    if (seasons && seasons.length > 0 && !selectedSeasonId) {
+      const activeSeason = seasons.find((s: Season) => !s.endDate) || seasons[0];
+      setSelectedSeasonId(activeSeason.id);
+    }
+  }, [seasons, selectedSeasonId]);
 
   const openPlayerModal = () => setIsPlayerModalOpen(true);
   const closePlayerModal = () => setIsPlayerModalOpen(false);
@@ -82,11 +93,29 @@ function App() {
         </nav>
 
         {/* Tab Content */}
+        {activeTab === 'seasons' && (
+          <>
+            <div className="mb-8">
+              <SeasonsManager
+                seasons={seasons}
+                onAddSeason={addSeason}
+                onEditSeason={editSeason}
+                onDeleteSeason={deleteSeason}
+                selectedSeasonId={selectedSeasonId}
+                onSelectSeason={setSelectedSeasonId}
+              />
+            </div>
+            {selectedSeasonId && (
+              <SeasonStats seasonId={selectedSeasonId} players={players} matches={matches} />
+            )}
+          </>
+        )}
+
         {activeTab === 'matches' && (
           <>
-            {(matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).length > 0) ? (
+            {(matches.filter((m: Match) => !selectedSeasonId || m.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).map(match => (
+                {matches.filter((m: Match) => !selectedSeasonId || m.seasonId === selectedSeasonId).map((match: Match) => (
                   <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
                 ))}
               </div>
@@ -107,9 +136,9 @@ function App() {
               </button>
               <NewPlayerForm onAddPlayer={addPlayer} selectedSeasonId={selectedSeasonId} />
             </div>
-            {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
+            {(players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).map(player => (
+                {players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).map((player: Player) => (
                   <PlayerCard
                     key={player.id}
                     player={player}
@@ -136,8 +165,8 @@ function App() {
         {activeTab === 'generator' && (
           <>
             <div className="space-y-6">
-              {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
-                <TeamGenerator players={players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId)} />
+              {(players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
+                <TeamGenerator players={players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId)} />
               ) : (
                 <div className="text-center text-gray-500">No hay jugadores disponibles.</div>
               )}

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Season } from '../types';
 import { SeasonSelector } from './Seasons/SeasonSelector';
-import { db } from "../db";
+import { SupabaseService } from "../db/supabase-service";
+const db = new SupabaseService();
 import { setScoreFactors } from "../utils/playerStats";
 import { Download } from "lucide-react";
 
@@ -40,14 +41,24 @@ export function SettingsModal({ onClose, seasons, selectedSeasonId, onSelectSeas
 
   const exportDB = async () => {
     try {
-      const players = await db.getAllPlayers();
-      const matches = await db.getAllMatches();
-      const settings = await db.settings.toArray();
+      const [players, matches, settings] = await Promise.all([
+        db.getAllPlayers(),
+        db.getAllMatches(),
+        Promise.all([
+          db.getSetting('goalScoreFactor'),
+          db.getSetting('assistScoreFactor')
+        ])
+      ]);
+
+      const [goalScoreFactor, assistScoreFactor] = settings;
 
       const exportData = {
         players,
         matches,
-        settings,
+        settings: {
+          goalScoreFactor,
+          assistScoreFactor
+        },
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });

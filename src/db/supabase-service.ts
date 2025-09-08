@@ -1,9 +1,10 @@
 import { supabase } from "./supabase";
 import type { Player, Match, Season } from "../types";
+import type { MatchWithRelations, MatchPlayerRow, GoalRow } from "./types";
 
 export class SupabaseService {
   // Players
-  async addPlayer(name: string): Promise<string> {
+  async addPlayer(name: string, seasonId?: string): Promise<string> {
     const { data, error } = await supabase
       .from("players")
       .insert({
@@ -13,6 +14,7 @@ export class SupabaseService {
         losses: 0,
         goals: 0,
         assists: 0,
+        season_id: seasonId || null
       })
       .select()
       .single();
@@ -27,41 +29,92 @@ export class SupabaseService {
   ): Promise<void> {
     const { error } = await supabase
       .from("players")
-      .update(updatedData)
+      .update({
+        ...updatedData,
+        season_id: updatedData.seasonId
+      })
       .eq("id", id);
 
     if (error) throw error;
   }
 
   async getAllPlayers(): Promise<Player[]> {
-    const { data, error } = await supabase.from("players").select("*");
+    const { data, error } = await supabase
+      .from("players")
+      .select(`
+        id,
+        name,
+        matches,
+        wins,
+        losses,
+        goals,
+        assists,
+        season_id,
+        seasons (
+          id,
+          name,
+          start_date,
+          end_date
+        )
+      `);
 
     if (error) throw error;
-    return data;
+    return data.map(player => ({
+      id: player.id,
+      name: player.name,
+      matches: player.matches,
+      wins: player.wins,
+      losses: player.losses,
+      goals: player.goals,
+      assists: player.assists,
+      seasonId: player.season_id || undefined
+    }));
   }
 
   async deletePlayer(id: string): Promise<void> {
     const { error } = await supabase.from("players").delete().eq("id", id);
-
     if (error) throw error;
   }
 
-  async updatePlayerStats(id: string, stats: Partial<Player>): Promise<void> {
-    const { error } = await supabase.from("players").update(stats).eq("id", id);
+  async updatePlayerStats(id: string, stats: Partial<Player>, seasonId?: string): Promise<void> {
+    const { data: currentStats, error: statsError } = await supabase
+      .from("players")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (statsError) throw statsError;
+
+    const statsToUpdate = {
+      matches: (currentStats.matches || 0) + (stats.matches || 0),
+      wins: (currentStats.wins || 0) + (stats.wins || 0),
+      losses: (currentStats.losses || 0) + (stats.losses || 0),
+      goals: (currentStats.goals || 0) + (stats.goals || 0),
+      assists: (currentStats.assists || 0) + (stats.assists || 0)
+    };
+
+    // If this is the first match in a season for this player and they don't have a season yet
+    if (seasonId && !currentStats.season_id) {
+      statsToUpdate.season_id = seasonId;
+    }
+
+    const { error } = await supabase
+      .from("players")
+      .update(statsToUpdate)
+      .eq("id", id);
 
     if (error) throw error;
   }
 
   // Matches
   async addMatch(match: Omit<Match, "id">): Promise<string> {
-    // First, create the match
     const { data: matchData, error: matchError } = await supabase
       .from("matches")
       .insert({
         date: match.date,
         season_id: match.seasonId || null,
         team_a_score: match.teamA.score,
-        team_b_score: match.teamB.score,
+        team_b_score: match.teamB.score
       })
       .select()
       .single();
@@ -70,18 +123,17 @@ export class SupabaseService {
 
     const matchId = matchData.id;
 
-    // Then, add all players
     const matchPlayers = [
       ...match.teamA.players.map((player) => ({
         match_id: matchId,
         player_id: player.id,
-        team: "A",
+        team: "A" as const
       })),
       ...match.teamB.players.map((player) => ({
         match_id: matchId,
         player_id: player.id,
-        team: "B",
-      })),
+        team: "B" as const
+      }))
     ];
 
     const { error: playersError } = await supabase
@@ -90,14 +142,13 @@ export class SupabaseService {
 
     if (playersError) throw playersError;
 
-    // Finally, add all goals
     if (match.goals.length > 0) {
       const { error: goalsError } = await supabase.from("goals").insert(
         match.goals.map((goal) => ({
           match_id: matchId,
           player_id: goal.playerId,
           assist_by_id: goal.assistById || null,
-          minute: goal.minute,
+          minute: goal.minute
         }))
       );
 
@@ -107,120 +158,65 @@ export class SupabaseService {
     return matchId;
   }
 
-  async updateMatch(match: Match): Promise<void> {
-    // Update match basic info
-    const { error: matchError } = await supabase
-      .from("matches")
-      .update({
-        date: match.date,
-        season_id: match.seasonId || null,
-        team_a_score: match.teamA.score,
-        team_b_score: match.teamB.score,
-      })
-      .eq("id", match.id);
-
-    if (matchError) throw matchError;
-
-    // Delete and re-insert players
-    const { error: deletePlayers } = await supabase
-      .from("match_players")
-      .delete()
-      .eq("match_id", match.id);
-
-    if (deletePlayers) throw deletePlayers;
-
-    const matchPlayers = [
-      ...match.teamA.players.map((player) => ({
-        match_id: match.id,
-        player_id: player.id,
-        team: "A",
-      })),
-      ...match.teamB.players.map((player) => ({
-        match_id: match.id,
-        player_id: player.id,
-        team: "B",
-      })),
-    ];
-
-    const { error: playersError } = await supabase
-      .from("match_players")
-      .insert(matchPlayers);
-
-    if (playersError) throw playersError;
-
-    // Delete and re-insert goals
-    const { error: deleteGoals } = await supabase
-      .from("goals")
-      .delete()
-      .eq("match_id", match.id);
-
-    if (deleteGoals) throw deleteGoals;
-
-    if (match.goals.length > 0) {
-      const { error: goalsError } = await supabase.from("goals").insert(
-        match.goals.map((goal) => ({
-          match_id: match.id,
-          player_id: goal.playerId,
-          assist_by_id: goal.assistById || null,
-          minute: goal.minute,
-        }))
-      );
-
-      if (goalsError) throw goalsError;
-    }
-  }
-
-  async deleteMatch(id: string): Promise<void> {
-    const { error } = await supabase.from("matches").delete().eq("id", id);
-
-    if (error) throw error;
-  }
-
   async getAllMatches(): Promise<Match[]> {
     const { data: matches, error: matchesError } = await supabase
       .from("matches")
-      .select("*")
+      .select(`
+        id,
+        date,
+        season_id,
+        team_a_score,
+        team_b_score,
+        match_players (
+          team,
+          players (
+            id,
+            name,
+            matches,
+            wins,
+            losses,
+            goals,
+            assists,
+            season_id
+          )
+        ),
+        goals (
+          id,
+          player_id,
+          assist_by_id,
+          minute
+        )
+      `)
       .order("date", { ascending: false });
 
     if (matchesError) throw matchesError;
 
-    // Get all match players
-    const { data: matchPlayers, error: playersError } = await supabase
-      .from("match_players")
-      .select("*");
+    return matches.map((match: MatchWithRelations) => {
+      const teamAPlayers = match.match_players
+        .filter(mp => mp.team === "A")
+        .map(mp => ({
+          id: mp.players.id,
+          name: mp.players.name,
+          matches: mp.players.matches,
+          wins: mp.players.wins,
+          losses: mp.players.losses,
+          goals: mp.players.goals,
+          assists: mp.players.assists,
+          seasonId: mp.players.season_id || undefined
+        }));
 
-    if (playersError) throw playersError;
-
-    // Get all goals
-    const { data: goals, error: goalsError } = await supabase
-      .from("goals")
-      .select("*");
-
-    if (goalsError) throw goalsError;
-
-    // Get all players for reference
-    const { data: players, error: allPlayersError } = await supabase
-      .from("players")
-      .select("*");
-
-    if (allPlayersError) throw allPlayersError;
-
-    // Transform the data to match our frontend model
-    return matches.map((match) => {
-      const matchPlayerEntries = matchPlayers.filter(
-        (mp) => mp.match_id === match.id
-      );
-      const matchGoals = goals.filter((g) => g.match_id === match.id);
-
-      const teamAPlayers = matchPlayerEntries
-        .filter((mp) => mp.team === "A")
-        .map((mp) => players.find((p) => p.id === mp.player_id))
-        .filter((p): p is Player => p !== undefined);
-
-      const teamBPlayers = matchPlayerEntries
-        .filter((mp) => mp.team === "B")
-        .map((mp) => players.find((p) => p.id === mp.player_id))
-        .filter((p): p is Player => p !== undefined);
+      const teamBPlayers = match.match_players
+        .filter(mp => mp.team === "B")
+        .map(mp => ({
+          id: mp.players.id,
+          name: mp.players.name,
+          matches: mp.players.matches,
+          wins: mp.players.wins,
+          losses: mp.players.losses,
+          goals: mp.players.goals,
+          assists: mp.players.assists,
+          seasonId: mp.players.season_id || undefined
+        }));
 
       return {
         id: match.id,
@@ -234,7 +230,7 @@ export class SupabaseService {
           players: teamBPlayers,
           score: match.team_b_score,
         },
-        goals: matchGoals.map((g) => ({
+        goals: match.goals.map(g => ({
           playerId: g.player_id,
           minute: g.minute,
           assistById: g.assist_by_id || undefined,
@@ -243,46 +239,157 @@ export class SupabaseService {
     });
   }
 
+  async deleteMatch(id: string): Promise<void> {
+    // First delete the goals
+    const { error: goalsError } = await supabase
+      .from("goals")
+      .delete()
+      .eq("match_id", id);
+
+    if (goalsError) throw goalsError;
+
+    // Then delete match players
+    const { error: playersError } = await supabase
+      .from("match_players")
+      .delete()
+      .eq("match_id", id);
+
+    if (playersError) throw playersError;
+
+    // Finally delete the match
+    const { error } = await supabase
+      .from("matches")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+  }
+
+  async editMatch(match: Match): Promise<void> {
+    // Update match
+    const { error: matchError } = await supabase
+      .from("matches")
+      .update({
+        date: match.date,
+        season_id: match.seasonId || null,
+        team_a_score: match.teamA.score,
+        team_b_score: match.teamB.score
+      })
+      .eq("id", match.id);
+
+    if (matchError) throw matchError;
+
+    // Delete old match players and goals
+    const { error: deletePlayersError } = await supabase
+      .from("match_players")
+      .delete()
+      .eq("match_id", match.id);
+
+    if (deletePlayersError) throw deletePlayersError;
+
+    const { error: deleteGoalsError } = await supabase
+      .from("goals")
+      .delete()
+      .eq("match_id", match.id);
+
+    if (deleteGoalsError) throw deleteGoalsError;
+
+    // Insert new match players
+    const matchPlayers = [
+      ...match.teamA.players.map((player) => ({
+        match_id: match.id,
+        player_id: player.id,
+        team: "A" as const
+      })),
+      ...match.teamB.players.map((player) => ({
+        match_id: match.id,
+        player_id: player.id,
+        team: "B" as const
+      }))
+    ];
+
+    const { error: playersError } = await supabase
+      .from("match_players")
+      .insert(matchPlayers);
+
+    if (playersError) throw playersError;
+
+    // Insert new goals
+    if (match.goals.length > 0) {
+      const { error: goalsError } = await supabase
+        .from("goals")
+        .insert(
+          match.goals.map((goal) => ({
+            match_id: match.id,
+            player_id: goal.playerId,
+            assist_by_id: goal.assistById || null,
+            minute: goal.minute
+          }))
+        );
+
+      if (goalsError) throw goalsError;
+    }
+  }
+
   async getMatchById(id: string): Promise<Match | undefined> {
     const { data: match, error: matchError } = await supabase
       .from("matches")
-      .select("*")
+      .select(`
+        id,
+        date,
+        season_id,
+        team_a_score,
+        team_b_score,
+        match_players (
+          team,
+          players (
+            id,
+            name,
+            matches,
+            wins,
+            losses,
+            goals,
+            assists,
+            season_id
+          )
+        ),
+        goals (
+          id,
+          player_id,
+          assist_by_id,
+          minute
+        )
+      `)
       .eq("id", id)
       .single();
 
     if (matchError) return undefined;
 
-    const { data: matchPlayers, error: playersError } = await supabase
-      .from("match_players")
-      .select("*")
-      .eq("match_id", id);
+    const teamAPlayers = match.match_players
+      .filter((mp: MatchPlayerRow) => mp.team === "A" && mp.players)
+      .map((mp: MatchPlayerRow) => ({
+        id: mp.players!.id,
+        name: mp.players!.name,
+        matches: mp.players!.matches,
+        wins: mp.players!.wins,
+        losses: mp.players!.losses,
+        goals: mp.players!.goals,
+        assists: mp.players!.assists,
+        seasonId: mp.players!.season_id || undefined
+      }));
 
-    if (playersError) throw playersError;
-
-    const { data: goals, error: goalsError } = await supabase
-      .from("goals")
-      .select("*")
-      .eq("match_id", id);
-
-    if (goalsError) throw goalsError;
-
-    const playerIds = matchPlayers.map((mp) => mp.player_id);
-    const { data: players, error: allPlayersError } = await supabase
-      .from("players")
-      .select("*")
-      .in("id", playerIds);
-
-    if (allPlayersError) throw allPlayersError;
-
-    const teamAPlayers = matchPlayers
-      .filter((mp) => mp.team === "A")
-      .map((mp) => players.find((p) => p.id === mp.player_id))
-      .filter((p): p is Player => p !== undefined);
-
-    const teamBPlayers = matchPlayers
-      .filter((mp) => mp.team === "B")
-      .map((mp) => players.find((p) => p.id === mp.player_id))
-      .filter((p): p is Player => p !== undefined);
+    const teamBPlayers = match.match_players
+      .filter((mp: MatchPlayerRow) => mp.team === "B" && mp.players)
+      .map((mp: MatchPlayerRow) => ({
+        id: mp.players!.id,
+        name: mp.players!.name,
+        matches: mp.players!.matches,
+        wins: mp.players!.wins,
+        losses: mp.players!.losses,
+        goals: mp.players!.goals,
+        assists: mp.players!.assists,
+        seasonId: mp.players!.season_id || undefined
+      }));
 
     return {
       id: match.id,
@@ -296,14 +403,14 @@ export class SupabaseService {
         players: teamBPlayers,
         score: match.team_b_score,
       },
-      goals: goals.map((g) => ({
+      goals: match.goals.map((g: GoalRow) => ({
         playerId: g.player_id,
         minute: g.minute,
         assistById: g.assist_by_id || undefined,
       })),
     };
   }
-
+  
   // Seasons
   async addSeason(season: Omit<Season, "id">): Promise<string> {
     const { data, error } = await supabase
@@ -311,7 +418,7 @@ export class SupabaseService {
       .insert({
         name: season.name,
         start_date: season.startDate,
-        end_date: season.endDate || null,
+        end_date: season.endDate || null
       })
       .select()
       .single();
@@ -326,7 +433,7 @@ export class SupabaseService {
       .update({
         name: season.name,
         start_date: season.startDate,
-        end_date: season.endDate || null,
+        end_date: season.endDate || null
       })
       .eq("id", season.id);
 
@@ -334,7 +441,19 @@ export class SupabaseService {
   }
 
   async deleteSeason(id: string): Promise<void> {
-    const { error } = await supabase.from("seasons").delete().eq("id", id);
+    // First, unlink players from this season
+    const { error: playersError } = await supabase
+      .from("players")
+      .update({ season_id: null })
+      .eq("season_id", id);
+
+    if (playersError) throw playersError;
+
+    // Then delete the season
+    const { error } = await supabase
+      .from("seasons")
+      .delete()
+      .eq("id", id);
 
     if (error) throw error;
   }
@@ -347,11 +466,11 @@ export class SupabaseService {
 
     if (error) throw error;
 
-    return data.map((season) => ({
+    return data.map(season => ({
       id: season.id,
       name: season.name,
       startDate: season.start_date,
-      endDate: season.end_date || undefined,
+      endDate: season.end_date || undefined
     }));
   }
 
@@ -368,7 +487,7 @@ export class SupabaseService {
       id: data.id,
       name: data.name,
       startDate: data.start_date,
-      endDate: data.end_date || undefined,
+      endDate: data.end_date || undefined
     };
   }
 
