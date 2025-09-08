@@ -1,24 +1,23 @@
 import { Plus } from 'lucide-react';
-import { Player, Match } from '../../types';
+import type { Player, Match } from '../../types';
 import { useNewMatchForm } from '../../hooks/useNewMatchForm';
 import { TeamSelector } from './TeamSelector';
 import { MatchDateInput } from './MatchDateInput';
 import { GoalsSection } from './GoalsSection';
+import { useMemo } from 'react';
 
-
-import { Season } from '../../types';
 
 interface NewMatchFormProps {
   players: Player[];
   onAddMatch: (match: Omit<Match, 'id'>) => void;
-  seasons: Season[];
+  selectedSeasonId: string | null;
 }
 
-
-import { useState } from 'react';
-
-export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps) {
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+export function NewMatchForm({ players, onAddMatch, selectedSeasonId }: NewMatchFormProps) {
+  const filteredPlayers = useMemo(() =>
+    players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId),
+    [players, selectedSeasonId]
+  );
   const {
     matchDate,
     setMatchDate,
@@ -36,7 +35,7 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
     togglePlayerSelection,
     selectedPlayers,
     availablePlayers,
-  } = useNewMatchForm(players, onAddMatch);
+  } = useNewMatchForm(filteredPlayers, onAddMatch);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +59,6 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
     setTeamAScore(null);
     setTeamBScore(null);
     setGoals([]);
-    setSelectedSeasonId(null);
   };
 
   return (
@@ -72,7 +70,7 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
       <div className="grid lg:grid-cols-3 gap-8">
         <TeamSelector
           team="A"
-          players={players}
+          players={filteredPlayers}
           selectedPlayers={teamAPlayers}
           otherTeamPlayers={teamBPlayers}
           score={teamAScore}
@@ -81,7 +79,7 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
         />
         <TeamSelector
           team="B"
-          players={players}
+          players={filteredPlayers}
           selectedPlayers={teamBPlayers}
           otherTeamPlayers={teamAPlayers}
           score={teamBScore}
@@ -90,22 +88,9 @@ export function NewMatchForm({ players, onAddMatch, seasons }: NewMatchFormProps
         />
         <div>
           <MatchDateInput matchDate={matchDate} setMatchDate={setMatchDate} />
-          <div className="mb-4 flex gap-2 items-center">
-            <label className="text-gray-700 font-semibold">Temporada:</label>
-            <select
-              className="border rounded p-2"
-              value={selectedSeasonId || ''}
-              onChange={e => setSelectedSeasonId(e.target.value || null)}
-            >
-              <option value="">Sin temporada</option>
-              {seasons.map(season => (
-                <option key={season.id} value={season.id}>{season.name}</option>
-              ))}
-            </select>
-          </div>
           <GoalsSection
             goals={goals}
-            players={players}
+            players={filteredPlayers}
             availablePlayers={availablePlayers}
             handleAddGoal={handleAddGoal}
             selectedPlayers={selectedPlayers}

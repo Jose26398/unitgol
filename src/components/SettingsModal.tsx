@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import type { Season } from '../types';
+import { SeasonSelector } from './Seasons/SeasonSelector';
 import { db } from "../db";
 import { setScoreFactors } from "../utils/playerStats";
 import { Download } from "lucide-react";
 
-export function SettingsModal({ onClose }: { onClose: () => void }) {
+
+interface SettingsModalProps {
+  onClose: () => void;
+  seasons: Season[];
+  selectedSeasonId: string | null;
+  onSelectSeason: (seasonId: string | null) => void;
+}
+
+export function SettingsModal({ onClose, seasons, selectedSeasonId, onSelectSeason }: SettingsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [goalScoreFactor, setGoalScoreFactor] = useState(10);
   const [assistScoreFactor, setAssistScoreFactor] = useState(5);
@@ -58,6 +68,15 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div ref={modalRef} className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Configuración</h2>
+
+        {/* Selector de temporada */}
+        <div className="mb-6">
+          <SeasonSelector
+            seasons={seasons}
+            selectedSeasonId={selectedSeasonId}
+            onSelect={onSelectSeason}
+          />
+        </div>
 
         {/* Factor de puntos por gol */}
         <div className="mb-6">
