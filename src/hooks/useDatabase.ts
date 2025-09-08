@@ -1,11 +1,46 @@
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { useState, useEffect } from 'react';
+import { SupabaseService } from '../db/supabase-service';
 import { Player, Match, Season } from '../types';
 
+const db = new SupabaseService();
+
 export function useDatabase() {
-  const players = useLiveQuery(() => db.getAllPlayers()) || [];
-  const matches = useLiveQuery(() => db.getAllMatches()) || [];
-  const seasons = useLiveQuery(() => db.getAllSeasons()) || [];
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [loading, setLoading] = useState({
+    players: true,
+    matches: true,
+    seasons: true
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [playersData, matchesData, seasonsData] = await Promise.all([
+          db.getAllPlayers(),
+          db.getAllMatches(),
+          db.getAllSeasons()
+        ]);
+
+        setPlayers(playersData);
+        setMatches(matchesData);
+        setSeasons(seasonsData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Error al cargar los datos');
+      } finally {
+        setLoading({
+          players: false,
+          matches: false,
+          seasons: false
+        });
+      }
+    };
+
+    fetchData();
+  }, []);
   // Season CRUD
   const addSeason = async (season: Omit<Season, 'id'>) => {
     return await db.addSeason(season);
@@ -94,7 +129,7 @@ export function useDatabase() {
 
     for (const player of allPlayers) {
       const isTeamA = match.teamA.players.some(p => p.id === player.id);
-      const currentStats = await db.players.get(player.id);
+      const currentStats = players.find(p => p.id === player.id);
 
       if (currentStats) {
         const wins = isTeamA ?
@@ -115,6 +150,15 @@ export function useDatabase() {
           goals,
           assists,
         });
+
+        setPlayers(prev => prev.map(p => p.id === player.id ? {
+          ...p,
+          matches: currentStats.matches + multiplier,
+          wins,
+          losses,
+          goals,
+          assists,
+        } : p));
       }
     }
   };
@@ -123,6 +167,8 @@ export function useDatabase() {
     players,
     matches,
     seasons,
+    loading,
+    error,
     addPlayer,
     editPlayer,
     deletePlayer,
