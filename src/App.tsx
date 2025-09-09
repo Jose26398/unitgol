@@ -9,7 +9,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { TeamGenerator } from './components/TeamGenerator/TeamGenerator';
 import { useDatabase } from './hooks/useDatabase';
 import { SeasonsManager } from './components/Seasons/SeasonsManager';
-import { SeasonSelector } from './components/Seasons/SeasonSelector';
 import { SeasonStats } from './components/Seasons/SeasonStats';
 
 function App() {
@@ -32,12 +31,14 @@ function App() {
         <div className="container mx-auto flex items-center gap-3 px-4">
           <img src="/favicon.ico" className="w-8 h-8" alt="Logo" />
           <h1 className="text-2xl font-bold flex-1">UnitGol</h1>
-          <button
-            className="bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700"
-            onClick={openSettingsModal}
-          >
-            <Settings className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              className="bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700"
+              onClick={openSettingsModal}
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -85,11 +86,6 @@ function App() {
 
         {activeTab === 'matches' && (
           <>
-            <SeasonSelector
-              seasons={seasons}
-              selectedSeasonId={selectedSeasonId}
-              onSelect={setSelectedSeasonId}
-            />
             {(matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {matches.filter(m => !selectedSeasonId || m.seasonId === selectedSeasonId).map(match => (
@@ -111,16 +107,17 @@ function App() {
               >
                 Tabla Resumen
               </button>
-              <NewPlayerForm onAddPlayer={addPlayer} />
+              <NewPlayerForm onAddPlayer={addPlayer} selectedSeasonId={selectedSeasonId} />
             </div>
-            {players.length > 0 ? (
+            {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {players.map(player => (
+                {players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).map(player => (
                   <PlayerCard
                     key={player.id}
                     player={player}
                     onEdit={editPlayer}
                     onDelete={deletePlayer}
+                    seasons={seasons}
                   />
                 ))}
               </div>
@@ -133,7 +130,7 @@ function App() {
         {activeTab === 'newMatch' && (
           <>
             <div className="space-y-6">
-              <NewMatchForm players={players} onAddMatch={addMatch} seasons={seasons} />
+              <NewMatchForm players={players} onAddMatch={addMatch} selectedSeasonId={selectedSeasonId} />
             </div>
           </>
         )}
@@ -141,12 +138,11 @@ function App() {
         {activeTab === 'generator' && (
           <>
             <div className="space-y-6">
-              {players.length > 0 ? (
-                <TeamGenerator players={players} />
+              {(players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
+                <TeamGenerator players={players.filter(p => !selectedSeasonId || p.seasonId === selectedSeasonId)} />
               ) : (
                 <div className="text-center text-gray-500">No hay jugadores disponibles.</div>
-              )
-              }
+              )}
             </div>
           </>
         )}
@@ -158,7 +154,12 @@ function App() {
 
         {/* Settings Modal */}
         {isSettingsModalOpen && (
-          <SettingsModal onClose={closeSettingsModal} />
+          <SettingsModal
+            onClose={closeSettingsModal}
+            seasons={seasons}
+            selectedSeasonId={selectedSeasonId}
+            onSelectSeason={setSelectedSeasonId}
+          />
         )}
       </main>
 

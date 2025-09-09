@@ -19,8 +19,8 @@ export function useDatabase() {
     await db.deleteSeason(id);
   };
 
-  const addPlayer = async (newPlayer: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'>) => {
-    return await db.addPlayer(newPlayer.name);
+  const addPlayer = async (newPlayer: Omit<Player, 'id' | 'matches' | 'wins' | 'losses' | 'goals' | 'assists'> & { seasonId: string }) => {
+    return await db.addPlayer(newPlayer.name, newPlayer.seasonId);
   };
 
   const editPlayer = async (id: string, updatedData: Partial<Omit<Player, 'id'>>) => {

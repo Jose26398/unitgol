@@ -37,7 +37,10 @@ interface SeasonStatsProps {
   matches: Match[];
 }
 
+
 export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
+  const filteredPlayers = useMemo(() => players.filter(p => p.seasonId === seasonId), [players, seasonId]);
+
   const [detailChart, setDetailChart] = useState<ChartData<'bar' | 'line', number[], string> | null>(null);
   const [chartMode, setChartMode] = useState<'bar' | 'line'>('bar');
   const [chartStat, setChartStat] = useState<'matches' | 'goals' | 'assists'>('goals');
@@ -50,9 +53,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
     [seasonMatches]
   );
 
-
   const playerStats = useMemo(() =>
-    players.map(player => {
+    filteredPlayers.map(player => {
       const played = seasonMatches.filter(m =>
         m.teamA.players.some(p => p.id === player.id) ||
         m.teamB.players.some(p => p.id === player.id)
@@ -69,7 +71,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
         if (isB && m.teamB.score < m.teamA.score) losses++;
       });
       return { ...player, matches: played.length, goals, assists, wins, losses };
-    }), [players, seasonMatches]);
+    }), [filteredPlayers, seasonMatches]);
 
 
   // Awards and general stats
@@ -84,16 +86,17 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
   // Handler to change the dynamic chart
   const onClickStat = useCallback((stat: string, useLine: boolean) => {
+    const chartPlayers = filteredPlayers;
     // Stacked/grouped bar: wins and losses by player
     if (stat === 'winloss') {
       setChartMode('bar');
       setChartStat('matches');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [
           {
             label: 'Wins',
-            data: players.map(p => {
+            data: chartPlayers.map(p => {
               const ps = playerStats.find(x => x.id === p.id);
               return ps ? ps.wins : 0;
             }),
@@ -101,7 +104,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
           },
           {
             label: 'Losses',
-            data: players.map(p => {
+            data: chartPlayers.map(p => {
               const ps = playerStats.find(x => x.id === p.id);
               return ps ? ps.losses : 0;
             }),
@@ -117,11 +120,11 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartMode('bar');
       setChartStat('matches');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [
           {
             label: '% Wins',
-            data: players.map(p => {
+            data: chartPlayers.map(p => {
               const ps = playerStats.find(x => x.id === p.id);
               return ps && ps.matches > 0 ? ((ps.wins / ps.matches) * 100) : 0;
             }),
@@ -138,7 +141,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -151,8 +154,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               acc += score;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -165,10 +168,10 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartMode('bar');
       setChartStat('matches');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [{
           label: 'Matches played',
-          data: players.map(p => {
+          data: chartPlayers.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.matches : 0;
           }),
@@ -184,7 +187,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('matches');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -193,8 +196,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               if (played) acc++;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -208,7 +211,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -216,8 +219,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               acc += m.goals.filter(g => g.playerId === p.id).length;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -230,10 +233,10 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartMode('bar');
       setChartStat('goals');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [{
           label: 'Goals',
-          data: players.map(p => {
+          data: chartPlayers.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.goals : 0;
           }),
@@ -249,7 +252,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('assists');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -257,8 +260,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               acc += m.goals.filter(g => g.assistById === p.id).length;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -271,10 +274,10 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartMode('bar');
       setChartStat('assists');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [{
           label: 'Assists',
-          data: players.map(p => {
+          data: chartPlayers.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? ps.assists : 0;
           }),
@@ -290,7 +293,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let played = 0;
           let goals = 0;
           return {
@@ -303,8 +306,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               }
               return played ? goals / played : 0;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -318,7 +321,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('assists');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => {
+        datasets: chartPlayers.map((p, i) => {
           let played = 0;
           let assists = 0;
           return {
@@ -331,8 +334,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               }
               return played ? assists / played : 0;
             }),
-            borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -346,15 +349,15 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: players.map((p, i) => ({
+        datasets: chartPlayers.map((p, i) => ({
           label: p.name,
           data: matchesChrono.map(m => {
             const goals = m.goals.filter(g => g.playerId === p.id).length;
             const assists = m.goals.filter(g => g.assistById === p.id).length;
             return calculateScore({ ...p, goals, assists, matches: 1, wins: 0, losses: 0 });
           }),
-          borderColor: `hsl(${i * 360 / players.length},70%,50%)`,
-          backgroundColor: `hsla(${i * 360 / players.length},70%,50%,0.3)`,
+          borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
+          backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
           tension: 0.3,
         }))
       });
@@ -366,10 +369,10 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setChartMode('bar');
       setChartStat('goals');
       setDetailChart({
-        labels: players.map(p => p.name),
+        labels: chartPlayers.map(p => p.name),
         datasets: [{
           label: 'Score',
-          data: players.map(p => {
+          data: chartPlayers.map(p => {
             const ps = playerStats.find(x => x.id === p.id);
             return ps ? calculateScore(ps) : 0;
           }),

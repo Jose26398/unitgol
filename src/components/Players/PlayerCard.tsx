@@ -1,22 +1,24 @@
 import { User, Trash2, Edit } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
-import { Player } from '../../types';
+import { Player, Season } from '../../types';
 import { calculateWinRate, calculateScore } from '../../utils/playerStats';
 
 interface PlayerCardProps {
   player: Player;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void;
+  seasons?: Season[];
 }
 
-export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
+export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<Omit<Player, 'id'>>>({
     name: player.name,
     matches: player.matches,
     goals: player.goals,
     assists: player.assists,
+    seasonId: player.seasonId,
   });
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
@@ -167,6 +169,22 @@ export function PlayerCard({ player, onDelete, onEdit }: PlayerCardProps) {
                   }
                 />
               </div>
+              {seasons && (
+                <div>
+                  <label className='block text-sm font-medium text-gray-600'>
+                    Temporada
+                  </label>
+                  <select
+                    className='w-full border border-gray-300 rounded px-3 py-2'
+                    value={editedData.seasonId}
+                    onChange={e => setEditedData({ ...editedData, seasonId: e.target.value })}
+                  >
+                    {seasons.map(season => (
+                      <option key={season.id} value={season.id}>{season.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </form>
             <div className='flex justify-end gap-3 mt-4'>
               <button
