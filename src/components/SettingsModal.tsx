@@ -8,13 +8,14 @@ import { Download } from "lucide-react";
 
 
 interface SettingsModalProps {
+  isOpen: boolean;
   onClose: () => void;
   seasons: Season[];
   selectedSeasonId: string | null;
   onSelectSeason: (seasonId: string | null) => void;
 }
 
-export function SettingsModal({ onClose, seasons, selectedSeasonId, onSelectSeason }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSelectSeason }: SettingsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [goalScoreFactor, setGoalScoreFactor] = useState(10);
   const [assistScoreFactor, setAssistScoreFactor] = useState(5);
@@ -74,6 +75,8 @@ export function SettingsModal({ onClose, seasons, selectedSeasonId, onSelectSeas
       console.error('Error exporting database:', error);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">

@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { SupabaseService } from '../db/supabase-service';
 import { Player, Match, Season } from '../types';
+import { useAuth } from '../auth/hook';
 
 const db = new SupabaseService();
 
 export function useDatabase() {
+  const { teamAuth } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState<Season | null>(null);
   const [loading, setLoading] = useState({
     players: true,
     matches: true,
@@ -15,8 +18,22 @@ export function useDatabase() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial data
+  // Set team ID in SupabaseService when it changes
   useEffect(() => {
+    if (teamAuth) {
+      db.setTeamId(teamAuth.id);
+    }
+  }, [teamAuth]);
+
+  // Fetch initial data when teamAuth changes
+  useEffect(() => {
+    if (!teamAuth) {
+      setPlayers([]);
+      setMatches([]);
+      setSeasons([]);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [playersData, matchesData, seasonsData] = await Promise.all([
@@ -40,7 +57,7 @@ export function useDatabase() {
     };
 
     fetchData();
-  }, []);
+  }, [teamAuth]);
   // Season CRUD
   const addSeason = async (season: Omit<Season, 'id'>) => {
     return await db.addSeason(season);
@@ -78,7 +95,7 @@ export function useDatabase() {
   };
 
   const editMatch = async (updatedMatch: Match) => {
-    const oldMatch = await db.getMatch(updatedMatch.id);
+    const oldMatch = await db.getMatchById(updatedMatch.id);
 
     if (!oldMatch) {
       throw new Error(`Match with ID ${updatedMatch.id} not found`);
@@ -144,10 +161,20 @@ export function useDatabase() {
     }
   };
 
+  const selectSeason = (seasonId: string | null) => {
+    if (!seasonId) {
+      setSelectedSeason(null);
+      return;
+    }
+    const season = seasons.find(s => s.id === seasonId);
+    setSelectedSeason(season || null);
+  };
+
   return {
     players,
     matches,
     seasons,
+    selectedSeason,
     loading,
     error,
     addPlayer,
@@ -159,5 +186,6 @@ export function useDatabase() {
     addSeason,
     editSeason,
     deleteSeason,
+    selectSeason,
   };
 }

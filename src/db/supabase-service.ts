@@ -3,8 +3,16 @@ import type { Player, Match, Season } from "../types";
 import type { MatchWithRelations, MatchPlayerRow, GoalRow } from "./types";
 
 export class SupabaseService {
+  private teamId: string | null = null;
+
+  setTeamId(id: string) {
+    this.teamId = id;
+  }
+
   // Players
   async addPlayer(name: string, seasonId?: string): Promise<string> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data, error } = await supabase
       .from("players")
       .insert({
@@ -14,7 +22,8 @@ export class SupabaseService {
         losses: 0,
         goals: 0,
         assists: 0,
-        season_id: seasonId || null
+        season_id: seasonId || null,
+        team_id: this.teamId
       })
       .select()
       .single();
@@ -39,6 +48,8 @@ export class SupabaseService {
   }
 
   async getAllPlayers(): Promise<Player[]> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data, error } = await supabase
       .from("players")
       .select(`
@@ -56,7 +67,8 @@ export class SupabaseService {
           start_date,
           end_date
         )
-      `);
+      `)
+      .eq('team_id', this.teamId);
 
     if (error) throw error;
     return data.map(player => ({
@@ -95,7 +107,7 @@ export class SupabaseService {
 
     // If this is the first match in a season for this player and they don't have a season yet
     if (seasonId && !currentStats.season_id) {
-      statsToUpdate.season_id = seasonId;
+      Object.assign(statsToUpdate, { season_id: seasonId });
     }
 
     const { error } = await supabase
@@ -108,13 +120,16 @@ export class SupabaseService {
 
   // Matches
   async addMatch(match: Omit<Match, "id">): Promise<string> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data: matchData, error: matchError } = await supabase
       .from("matches")
       .insert({
         date: match.date,
         season_id: match.seasonId || null,
         team_a_score: match.teamA.score,
-        team_b_score: match.teamB.score
+        team_b_score: match.teamB.score,
+        team_id: this.teamId
       })
       .select()
       .single();
@@ -159,6 +174,8 @@ export class SupabaseService {
   }
 
   async getAllMatches(): Promise<Match[]> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data: matches, error: matchesError } = await supabase
       .from("matches")
       .select(`
@@ -187,6 +204,7 @@ export class SupabaseService {
           minute
         )
       `)
+      .eq('team_id', this.teamId)
       .order("date", { ascending: false });
 
     if (matchesError) throw matchesError;
@@ -413,12 +431,15 @@ export class SupabaseService {
   
   // Seasons
   async addSeason(season: Omit<Season, "id">): Promise<string> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data, error } = await supabase
       .from("seasons")
       .insert({
         name: season.name,
         start_date: season.startDate,
-        end_date: season.endDate || null
+        end_date: season.endDate || null,
+        team_id: this.teamId
       })
       .select()
       .single();
@@ -459,9 +480,12 @@ export class SupabaseService {
   }
 
   async getAllSeasons(): Promise<Season[]> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
     const { data, error } = await supabase
       .from("seasons")
       .select("*")
+      .eq('team_id', this.teamId)
       .order("start_date", { ascending: false });
 
     if (error) throw error;

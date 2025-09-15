@@ -58,9 +58,22 @@ export type MatchWithRelations = MatchRow & {
   goals: GoalRow[];
 };
 
+export type TeamRow = {
+  id: string;
+  name: string;
+  code: string;
+  email: string; // Email es requerido, no puede ser null
+  created_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
+      teams: {
+        Row: TeamRow;
+        Insert: Omit<TeamRow, "id" | "created_at">;
+        Update: Partial<Omit<TeamRow, "id" | "created_at">>;
+      };
       players: {
         Row: {
           id: string;
