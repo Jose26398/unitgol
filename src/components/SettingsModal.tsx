@@ -1,21 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import type { Season } from '../types';
 import { SeasonSelector } from './Seasons/SeasonSelector';
-import { SupabaseService } from "../db/supabase-service";
-const db = new SupabaseService();
+import { db } from "../db";
 import { setScoreFactors } from "../utils/playerStats";
 import { Download } from "lucide-react";
 
 
 interface SettingsModalProps {
-  isOpen: boolean;
   onClose: () => void;
   seasons: Season[];
   selectedSeasonId: string | null;
   onSelectSeason: (seasonId: string | null) => void;
 }
 
-export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSelectSeason }: SettingsModalProps) {
+export function SettingsModal({ onClose, seasons, selectedSeasonId, onSelectSeason }: SettingsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [goalScoreFactor, setGoalScoreFactor] = useState(10);
   const [assistScoreFactor, setAssistScoreFactor] = useState(5);
@@ -42,24 +40,14 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
 
   const exportDB = async () => {
     try {
-      const [players, matches, settings] = await Promise.all([
-        db.getAllPlayers(),
-        db.getAllMatches(),
-        Promise.all([
-          db.getSetting('goalScoreFactor'),
-          db.getSetting('assistScoreFactor')
-        ])
-      ]);
-
-      const [goalScoreFactor, assistScoreFactor] = settings;
+      const players = await db.getAllPlayers();
+      const matches = await db.getAllMatches();
+      const settings = await db.settings.toArray();
 
       const exportData = {
         players,
         matches,
-        settings: {
-          goalScoreFactor,
-          assistScoreFactor
-        },
+        settings,
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -75,8 +63,6 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
       console.error('Error exporting database:', error);
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
