@@ -36,11 +36,12 @@ export class SupabaseService {
     id: string,
     updatedData: Partial<Omit<Player, "id">>
   ): Promise<void> {
+    const { seasonId, ...data } = updatedData;
     const { error } = await supabase
       .from("players")
       .update({
-        ...updatedData,
-        season_id: updatedData.seasonId
+        ...data,
+        season_id: seasonId
       })
       .eq("id", id);
 
@@ -89,6 +90,8 @@ export class SupabaseService {
   }
 
   async updatePlayerStats(id: string, stats: Partial<Player>, seasonId?: string): Promise<void> {
+    console.log('updatePlayerStats called for player:', id, 'with stats:', stats, 'seasonId:', seasonId);
+
     const { data: currentStats, error: statsError } = await supabase
       .from("players")
       .select("*")
@@ -96,6 +99,8 @@ export class SupabaseService {
       .single();
 
     if (statsError) throw statsError;
+
+    console.log('Current stats for player:', id, currentStats);
 
     const statsToUpdate = {
       matches: (currentStats.matches || 0) + (stats.matches || 0),
@@ -105,9 +110,12 @@ export class SupabaseService {
       assists: (currentStats.assists || 0) + (stats.assists || 0)
     };
 
+    console.log('Stats to update:', statsToUpdate);
+
     // If this is the first match in a season for this player and they don't have a season yet
     if (seasonId && !currentStats.season_id) {
       Object.assign(statsToUpdate, { season_id: seasonId });
+      console.log('Setting season_id to:', seasonId);
     }
 
     const { error } = await supabase
@@ -116,10 +124,14 @@ export class SupabaseService {
       .eq("id", id);
 
     if (error) throw error;
+
+    console.log('Player stats updated successfully for:', id);
   }
 
   // Matches
   async addMatch(match: Omit<Match, "id">): Promise<string> {
+    console.log('addMatch called with match data:', match);
+
     if (!this.teamId) throw new Error('Team not authenticated');
 
     const { data: matchData, error: matchError } = await supabase
@@ -137,6 +149,7 @@ export class SupabaseService {
     if (matchError) throw matchError;
 
     const matchId = matchData.id;
+    console.log('Match created with id:', matchId);
 
     const matchPlayers = [
       ...match.teamA.players.map((player) => ({
@@ -169,6 +182,18 @@ export class SupabaseService {
 
       if (goalsError) throw goalsError;
     }
+
+    // Update player stats
+    const fullMatch: Match = {
+      id: matchId,
+      date: match.date,
+      seasonId: match.seasonId,
+      teamA: match.teamA,
+      teamB: match.teamB,
+      goals: match.goals
+    };
+    console.log('Calling addMatchStats for match:', matchId);
+    await this.addMatchStats(fullMatch);
 
     return matchId;
   }
@@ -258,6 +283,17 @@ export class SupabaseService {
   }
 
   async deleteMatch(id: string): Promise<void> {
+    console.log('deleteMatch called for match:', id);
+
+    // Get the match to subtract stats
+    const match = await this.getMatchById(id);
+    console.log('Match retrieved for deletion:', match);
+
+    if (match) {
+      console.log('Calling subtractMatchStats for match:', id);
+      await this.subtractMatchStats(match);
+    }
+
     // First delete the goals
     const { error: goalsError } = await supabase
       .from("goals")
@@ -281,9 +317,24 @@ export class SupabaseService {
       .eq("id", id);
 
     if (error) throw error;
+
+    console.log('Match deleted successfully:', id);
   }
 
   async editMatch(match: Match): Promise<void> {
+    console.log('editMatch called with match:', match);
+
+    // Get the current match to calculate stats to subtract
+    const currentMatch = await this.getMatchById(match.id);
+    console.log('currentMatch retrieved:', currentMatch);
+    if (!currentMatch) throw new Error('Match not found');
+
+    // Calculate and subtract old stats
+    if (currentMatch) {
+      console.log('subtracting stats for currentMatch');
+      await this.subtractMatchStats(currentMatch);
+    }
+
     // Update match
     const { error: matchError } = await supabase
       .from("matches")
@@ -346,6 +397,109 @@ export class SupabaseService {
         );
 
       if (goalsError) throw goalsError;
+    }
+
+    // Calculate and add new stats
+    console.log('adding stats for new match');
+    await this.addMatchStats(match);
+  }
+
+  private async addMatchStats(match: Match): Promise<void> {
+    console.log('addMatchStats called for match:', match.id, 'teamA score:', match.teamA.score, 'teamB score:', match.teamB.score);
+
+    const teamAWon = match.teamA.score > match.teamB.score;
+    const teamBWon = match.teamB.score > match.teamA.score;
+    const isDraw = match.teamA.score === match.teamB.score;
+
+    console.log('Match result - teamAWon:', teamAWon, 'teamBWon:', teamBWon, 'isDraw:', isDraw);
+
+    // Calculate goals and assists per player
+    const playerGoals = new Map<string, number>();
+    const playerAssists = new Map<string, number>();
+
+    match.goals.forEach(goal => {
+      playerGoals.set(goal.playerId, (playerGoals.get(goal.playerId) || 0) + 1);
+      if (goal.assistById) {
+        playerAssists.set(goal.assistById, (playerAssists.get(goal.assistById) || 0) + 1);
+      }
+    });
+
+    console.log('Player goals:', Object.fromEntries(playerGoals));
+    console.log('Player assists:', Object.fromEntries(playerAssists));
+
+    // Update stats for team A players
+    for (const player of match.teamA.players) {
+      const stats = {
+        matches: 1,
+        wins: teamAWon ? 1 : 0,
+        losses: teamBWon ? 1 : 0,
+        goals: playerGoals.get(player.id) || 0,
+        assists: playerAssists.get(player.id) || 0,
+      };
+      console.log('Updating team A player:', player.id, player.name, 'with stats:', stats);
+      await this.updatePlayerStats(player.id, stats, match.seasonId);
+    }
+
+    // Update stats for team B players
+    for (const player of match.teamB.players) {
+      const stats = {
+        matches: 1,
+        wins: teamBWon ? 1 : 0,
+        losses: teamAWon ? 1 : 0,
+        goals: playerGoals.get(player.id) || 0,
+        assists: playerAssists.get(player.id) || 0,
+      };
+      console.log('Updating team B player:', player.id, player.name, 'with stats:', stats);
+      await this.updatePlayerStats(player.id, stats, match.seasonId);
+    }
+  }
+
+  private async subtractMatchStats(match: Match): Promise<void> {
+    console.log('subtractMatchStats called for match:', match.id, 'teamA score:', match.teamA.score, 'teamB score:', match.teamB.score);
+
+    const teamAWon = match.teamA.score > match.teamB.score;
+    const teamBWon = match.teamB.score > match.teamA.score;
+
+    console.log('Subtracting match result - teamAWon:', teamAWon, 'teamBWon:', teamBWon);
+
+    // Calculate goals and assists per player
+    const playerGoals = new Map<string, number>();
+    const playerAssists = new Map<string, number>();
+
+    match.goals.forEach(goal => {
+      playerGoals.set(goal.playerId, (playerGoals.get(goal.playerId) || 0) + 1);
+      if (goal.assistById) {
+        playerAssists.set(goal.assistById, (playerAssists.get(goal.assistById) || 0) + 1);
+      }
+    });
+
+    console.log('Subtracting player goals:', Object.fromEntries(playerGoals));
+    console.log('Subtracting player assists:', Object.fromEntries(playerAssists));
+
+    // Update stats for team A players (subtract)
+    for (const player of match.teamA.players) {
+      const stats = {
+        matches: -1,
+        wins: teamAWon ? -1 : 0,
+        losses: teamBWon ? -1 : 0,
+        goals: -(playerGoals.get(player.id) || 0),
+        assists: -(playerAssists.get(player.id) || 0),
+      };
+      console.log('Subtracting team A player:', player.id, player.name, 'with stats:', stats);
+      await this.updatePlayerStats(player.id, stats, match.seasonId);
+    }
+
+    // Update stats for team B players (subtract)
+    for (const player of match.teamB.players) {
+      const stats = {
+        matches: -1,
+        wins: teamBWon ? -1 : 0,
+        losses: teamAWon ? -1 : 0,
+        goals: -(playerGoals.get(player.id) || 0),
+        assists: -(playerAssists.get(player.id) || 0),
+      };
+      console.log('Subtracting team B player:', player.id, player.name, 'with stats:', stats);
+      await this.updatePlayerStats(player.id, stats, match.seasonId);
     }
   }
 
