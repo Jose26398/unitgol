@@ -113,9 +113,9 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
 
       {/* Modal for editing */}
       {isEditing && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+        <div className='fixed inset-0 flex items-center justify-center bg-black/50 z-50'>
           <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
-            <h2 className='text-xl font-semibold mb-4'>Edit Player</h2>
+            <h2 className='text-xl font-semibold mb-4'>Editar Jugador</h2>
             <form className='space-y-3'>
               <div>
                 <label className='block text-sm font-medium text-gray-600'>
@@ -123,7 +123,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
                 </label>
                 <input
                   type='text'
-                  className='w-full border border-gray-300 rounded px-3 py-2'
+                  className='w-full border border-gray-300 rounded-sm px-3 py-2'
                   value={editedData.name}
                   onChange={e =>
                     setEditedData({ ...editedData, name: e.target.value })
@@ -136,7 +136,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
                 </label>
                 <input
                   type='number'
-                  className='w-full border border-gray-300 rounded px-3 py-2'
+                  className='w-full border border-gray-300 rounded-sm px-3 py-2'
                   value={editedData.matches}
                   onChange={e =>
                     setEditedData({ ...editedData, matches: +e.target.value })
@@ -149,7 +149,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
                 </label>
                 <input
                   type='number'
-                  className='w-full border border-gray-300 rounded px-3 py-2'
+                  className='w-full border border-gray-300 rounded-sm px-3 py-2'
                   value={editedData.goals}
                   onChange={e =>
                     setEditedData({ ...editedData, goals: +e.target.value })
@@ -162,7 +162,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
                 </label>
                 <input
                   type='number'
-                  className='w-full border border-gray-300 rounded px-3 py-2'
+                  className='w-full border border-gray-300 rounded-sm px-3 py-2'
                   value={editedData.assists}
                   onChange={e =>
                     setEditedData({ ...editedData, assists: +e.target.value })
@@ -175,7 +175,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
                     Temporada
                   </label>
                   <select
-                    className='w-full border border-gray-300 rounded px-3 py-2'
+                    className='w-full border border-gray-300 rounded-sm px-3 py-2'
                     value={editedData.seasonId}
                     onChange={e => setEditedData({ ...editedData, seasonId: e.target.value })}
                   >
@@ -189,13 +189,13 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
             <div className='flex justify-end gap-3 mt-4'>
               <button
                 onClick={handleCancel}
-                className='px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
+                className='px-4 py-2 bg-gray-300 text-gray-700 rounded-sm hover:bg-gray-400'
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
-                className='px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700'
+                className='px-4 py-2 bg-emerald-600 text-white rounded-sm hover:bg-emerald-700'
               >
                 Guardar
               </button>

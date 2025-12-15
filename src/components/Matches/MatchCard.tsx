@@ -13,8 +13,11 @@ interface MatchCardProps {
   onDelete: (match: Match) => void;
 }
 
+const GOALS_LIMIT = 5;
+
 export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [showAllGoals, setShowAllGoals] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { seasons } = useDatabase();
 
@@ -95,20 +98,59 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
       {/* Goals */}
       {match.goals.length > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex justify-center items-center gap-3 mb-3">
             <Trophy className="w-5 h-5 text-yellow-500" />
             <span className="text-lg font-semibold text-gray-700">Goles</span>
           </div>
           <div className="text-sm text-gray-600 space-y-2">
-            {match.goals.map((goal, index) => (
-              <div key={index}>
-                {`${match.teamA.players.concat(match.teamB.players).find(p => p.id === goal.playerId)?.name} (${goal.minute}')`}
-                {goal.assistById && (
-                  <span className="text-gray-500"> - Asistencia: {match.teamA.players.concat(match.teamB.players).find(p => p.id === goal.assistById)?.name}</span>
-                )}
+            {[...match.goals]
+              .sort((a, b) => a.minute - b.minute)
+              .slice(0, showAllGoals ? match.goals.length : GOALS_LIMIT)
+              .map((goal, index) => {
+
+                const allPlayers = match.teamA.players.concat(match.teamB.players);
+
+                const scorer = allPlayers.find(p => p.id === goal.playerId);
+                const assist = goal.assistById
+                  ? allPlayers.find(p => p.id === goal.assistById)
+                  : null;
+
+                const isTeamA = match.teamA.players.some(p => p.id === goal.playerId);
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex ${isTeamA ? "justify-start text-left" : "justify-end text-right"}`}
+                  >
+                    <div>
+                      <span className="font-medium">
+                        {scorer?.name} ({goal.minute}')
+                      </span>
+
+                      {assist && (
+                        <span className="text-gray-500">
+                          {" "}<br />Asistencia: {assist.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            {match.goals.length > GOALS_LIMIT && (
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => setShowAllGoals(prev => !prev)}
+                  className="text-emerald-600 hover:underline text-sm font-medium"
+                >
+                  {showAllGoals
+                    ? "Mostrar menos"
+                    : `Mostrar más (${match.goals.length - GOALS_LIMIT})`}
+                </button>
               </div>
-            ))}
+            )}
+
           </div>
+
         </div>
       )}
     </div>

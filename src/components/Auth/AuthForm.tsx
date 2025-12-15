@@ -60,7 +60,7 @@ export function AuthForm() {
             id="teamName"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-xs focus:border-emerald-500 focus:ring-emerald-500"
             placeholder="Mi equipo"
             required
           />
@@ -75,7 +75,7 @@ export function AuthForm() {
             id="teamCode"
             value={teamCode}
             onChange={(e) => setTeamCode(e.target.value)}
-            className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-xs focus:border-emerald-500 focus:ring-emerald-500"
             placeholder="••••••••"
             required
           />
@@ -92,7 +92,7 @@ export function AuthForm() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-xs focus:border-emerald-500 focus:ring-emerald-500"
                 placeholder="email@domain.com"
                 required
               />
@@ -106,7 +106,7 @@ export function AuthForm() {
                 id="confirmEmail"
                 value={confirmEmail}
                 onChange={(e) => setConfirmEmail(e.target.value)}
-                className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-xs focus:border-emerald-500 focus:ring-emerald-500"
                 placeholder="email@domain.com"
                 required
               />

@@ -40,33 +40,33 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Temporadas</h2>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded" onClick={() => { setShowForm(true); setEditId(null); }}>Nueva Temporada</button>
+        <button className="bg-emerald-600 text-white px-4 py-2 rounded-sm" onClick={() => { setShowForm(true); setEditId(null); }}>Nueva Temporada</button>
       </div>
       {showForm && (
         <form className="mb-6 space-y-2" onSubmit={handleSubmit}>
           <input
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded-sm w-full"
             placeholder="Nombre de la temporada"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             required
           />
           <input
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded-sm w-full"
             type="date"
             value={form.startDate}
             onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
             required
           />
           <input
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded-sm w-full"
             type="date"
             value={form.endDate || ''}
             onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
           />
           <div className="flex gap-2">
-            <button className="bg-emerald-600 text-white px-4 py-2 rounded" type="submit">{editId ? 'Guardar' : 'Crear'}</button>
-            <button className="bg-gray-300 px-4 py-2 rounded" type="button" onClick={() => { setShowForm(false); setEditId(null); }}>Cancelar</button>
+            <button className="bg-emerald-600 text-white px-4 py-2 rounded-sm" type="submit">{editId ? 'Guardar' : 'Crear'}</button>
+            <button className="bg-gray-300 px-4 py-2 rounded-sm" type="button" onClick={() => { setShowForm(false); setEditId(null); }}>Cancelar</button>
           </div>
         </form>
       )}
@@ -74,7 +74,7 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
         {seasons.map(season => (
           <li
             key={season.id}
-            className={`flex justify-between items-center border p-3 rounded bg-white cursor-pointer transition-colors ${selectedSeasonId === season.id ? 'bg-emerald-100 border-emerald-400' : 'hover:bg-gray-50'}`}
+            className={`flex justify-between items-center border p-3 rounded-sm bg-white cursor-pointer transition-colors ${selectedSeasonId === season.id ? 'bg-emerald-100 border-emerald-400' : 'hover:bg-gray-50'}`}
             onClick={() => onSelectSeason && onSelectSeason(season.id)}
           >
             <div>

@@ -47,7 +47,7 @@ export function EditMatchDialog({ match, onSave, onClose, seasons }: EditMatchDi
   const allPlayers = [...match.teamA.players, ...match.teamB.players];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Edit Match</h2>
@@ -120,7 +120,7 @@ export function EditMatchDialog({ match, onSave, onClose, seasons }: EditMatchDi
             <h3 className="font-medium mb-3">Goals</h3>
             <div className="space-y-3">
               {goals.map((goal, index) => (
-                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-sm">
                   <span className="text-sm">
                     {allPlayers.find(p => p.id === goal.playerId)?.name} ({goal.minute}')
                     {goal.assistById && ` - Assist: ${allPlayers.find(p => p.id === goal.assistById)?.name}`}

@@ -79,7 +79,7 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div ref={modalRef} className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Configuración</h2>
 
@@ -128,7 +128,7 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
           <div>
             <button
               onClick={exportDB}
-              className="flex gap-2 w-full justify-center md:w-fit bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+              className="flex gap-2 w-full justify-center md:w-fit bg-blue-500 text-white px-4 py-2 rounded-sm hover:bg-blue-600 transition-colors"
               aria-label="Exportar datos"
             >
               <Download className="w-5 h-5" />
@@ -138,7 +138,7 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
           <div className="flex justify-between space-x-3">
             <button
               onClick={onClose}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              className="bg-red-500 text-white px-4 py-2 rounded-sm hover:bg-red-600 transition-colors"
               aria-label="Cerrar modal"
             >
               Cerrar
@@ -146,7 +146,7 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
 
             <button
               onClick={applySettings}
-              className="w-full bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 transition-colors"
+              className="w-full bg-emerald-500 text-white px-4 py-2 rounded-sm hover:bg-emerald-600 transition-colors"
               aria-label="Aplicar cambios"
             >
               Aplicar

@@ -1,5 +1,5 @@
 import { LogOut, Settings } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { MatchCard } from './components/Matches/MatchCard';
 import { NewMatchForm } from './components/NewMatch/NewMatchForm';
 import { NewPlayerForm } from './components/Players/NewPlayerForm';
@@ -21,15 +21,24 @@ function App() {
   const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator' | 'seasons'>('seasons');
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
-  // Seleccionar la última temporada activa por defecto
-  useEffect(() => {
-    if (seasons && seasons.length > 0 && !selectedSeasonId) {
-      const activeSeason = seasons.find((s: Season) => !s.endDate) || seasons[0];
-      setSelectedSeasonId(activeSeason.id);
-    }
-  }, [seasons, selectedSeasonId]);
+  const defaultSeasonId = useMemo(() => {
+    if (!seasons?.length) return null;
+
+    const activeSeasons = seasons.filter(
+      (s: Season) => !s.endDate
+    );
+
+    const season =
+      activeSeasons[activeSeasons.length - 1] ??
+      seasons[seasons.length - 1];
+
+    return season.id;
+  }, [seasons]);
+
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(
+    defaultSeasonId
+  );
 
   const openPlayerModal = () => setIsPlayerModalOpen(true);
   const closePlayerModal = () => setIsPlayerModalOpen(false);
@@ -72,7 +81,7 @@ function App() {
           <>
             {/* Error Display */}
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-sm relative mb-4" role="alert">
                 <strong className="font-bold">Error: </strong>
                 <span className="block sm:inline">{error}</span>
               </div>
@@ -97,18 +106,18 @@ function App() {
                     { label: 'Nueva Jornada', value: 'newMatch' },
                     { label: 'Generador de Equipos', value: 'generator' }
                   ].map((tab) => (
-                  <button
-                    key={tab.value}
-                    onClick={() => setActiveTab(tab.value as typeof activeTab)}
-                    className={`relative px-4 py-2 font-semibold text-lg text-ellipsis whitespace-nowrap rounded-md ${activeTab === tab.value
-                      ? 'text-emerald-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-emerald-600'
-                      : 'text-gray-500 hover:text-emerald-600'
-                      }`}
-                    aria-current={activeTab === tab.value ? 'page' : undefined}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                    <button
+                      key={tab.value}
+                      onClick={() => setActiveTab(tab.value as typeof activeTab)}
+                      className={`relative px-4 py-2 font-semibold text-lg text-ellipsis whitespace-nowrap rounded-md ${activeTab === tab.value
+                        ? 'text-emerald-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-emerald-600'
+                        : 'text-gray-500 hover:text-emerald-600'
+                        }`}
+                      aria-current={activeTab === tab.value ? 'page' : undefined}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </nav>
 
                 {/* Tab Content */}
@@ -157,15 +166,21 @@ function App() {
                     </div>
                     {(players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).map((player: Player) => (
-                          <PlayerCard
-                            key={player.id}
-                            player={player}
-                            onEdit={editPlayer}
-                            onDelete={deletePlayer}
-                            seasons={seasons}
-                          />
-                        ))}
+                        {players
+                          .filter(
+                            (p: Player) =>
+                              !selectedSeasonId ||
+                              p.seasonId === selectedSeasonId
+                          )
+                          .map((player: Player) => (
+                            <PlayerCard
+                              key={player.id}
+                              player={player}
+                              onEdit={editPlayer}
+                              onDelete={deletePlayer}
+                              seasons={seasons}
+                            />
+                          ))}
                       </div>
                     ) : (
                       <div className="text-center text-gray-500">No hay jugadores disponibles.</div>
@@ -195,7 +210,10 @@ function App() {
 
                 {/* Modals */}
                 {isPlayerModalOpen && (
-                  <PlayerSummaryModal players={players} onClose={closePlayerModal} />
+                  <PlayerSummaryModal
+                    players={players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId)}
+                    onClose={closePlayerModal}
+                  />
                 )}
 
                 <SettingsModal

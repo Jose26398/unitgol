@@ -42,7 +42,7 @@ export function useDatabase() {
           db.getAllSeasons()
         ]);
 
-        setPlayers(playersData);
+        setPlayers(playersData.sort((a: Player, b: Player) => a.name.localeCompare(b.name)));
         setMatches(matchesData);
         setSeasons(seasonsData);
       } catch (e) {

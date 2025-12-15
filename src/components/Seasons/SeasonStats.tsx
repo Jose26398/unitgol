@@ -577,7 +577,7 @@ interface StatCardProps {
 function StatCard({ icon, label, value, onValueClick, highlight }: StatCardProps) {
   return (
     <div
-      className={`flex items-center gap-4 p-4 rounded-xl shadow-sm bg-white border hover:bg-emerald-100 hover:border-emerald-200 transition-colors cursor-pointer
+      className={`flex items-center gap-4 p-4 rounded-xl shadow-xs bg-white border hover:bg-emerald-100 hover:border-emerald-200 transition-colors cursor-pointer
         ${onValueClick ? 'underline decoration-dotted' : ''} transition-all duration-200
         ${highlight ? 'border-emerald-400 bg-emerald-50/60' : 'border-gray-100'}`}
       title={label}

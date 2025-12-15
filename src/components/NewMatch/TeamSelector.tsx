@@ -40,7 +40,9 @@ export function TeamSelector({
             onClick={() => togglePlayerSelection(player.id, team)}
             className={`flex items-center justify-between p-2 border rounded-md cursor-pointer ${
               selectedPlayers.includes(player.id)
-                ? `bg-${color}-50 border-${color}-300`
+                ? team === 'A'
+                  ? 'bg-emerald-50 border-emerald-300'
+                  : 'bg-blue-50 border-blue-300'
                 : 'hover:bg-gray-100'
             } ${
               otherTeamPlayers.includes(player.id) ? 'opacity-50 pointer-events-none' : ''
