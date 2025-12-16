@@ -5,6 +5,7 @@ import { SupabaseService } from "../db/supabase-service";
 const db = new SupabaseService();
 import { setScoreFactors } from "../utils/playerStats";
 import { Download } from "lucide-react";
+import { useAuth } from '../auth/hook';
 
 
 interface SettingsModalProps {
@@ -19,18 +20,37 @@ export function SettingsModal({ isOpen, onClose, seasons, selectedSeasonId, onSe
   const modalRef = useRef<HTMLDivElement>(null);
   const [goalScoreFactor, setGoalScoreFactor] = useState(10);
   const [assistScoreFactor, setAssistScoreFactor] = useState(5);
+  const { teamAuth } = useAuth();
+
+  useEffect(() => {
+    if (teamAuth) {
+      db.setTeamId(teamAuth.id);
+    }
+  }, [teamAuth]);
 
   useEffect(() => {
     const loadSettings = async () => {
-      const goal = await db.getSetting("goalScoreFactor");
-      const assist = await db.getSetting("assistScoreFactor");
+      let goal = await db.getSetting("goalScoreFactor");
+      let assist = await db.getSetting("assistScoreFactor");
 
-      setGoalScoreFactor(goal ?? 10);
-      setAssistScoreFactor(assist ?? 5);
+      // If settings don't exist, create them with defaults
+      if (goal === undefined) {
+        await db.setSetting("goalScoreFactor", 10);
+        goal = 10;
+      }
+      if (assist === undefined) {
+        await db.setSetting("assistScoreFactor", 5);
+        assist = 5;
+      }
+
+      setGoalScoreFactor(goal);
+      setAssistScoreFactor(assist);
     };
 
-    loadSettings();
-  }, []);
+    if (teamAuth) {
+      loadSettings();
+    }
+  }, [teamAuth]);
 
   const applySettings = async () => {
     await db.setSetting("goalScoreFactor", goalScoreFactor);

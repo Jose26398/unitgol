@@ -671,20 +671,26 @@ export class SupabaseService {
 
   // Settings
   async getSetting(key: string): Promise<number | undefined> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
+    const compositeKey = `${this.teamId}_${key}`;
     const { data, error } = await supabase
       .from("settings")
       .select("value")
-      .eq("key", key)
-      .single();
+      .eq("key", compositeKey)
+      .maybeSingle();
 
-    if (error) return undefined;
-    return data.value;
+    if (error) throw error;
+    return data?.value;
   }
 
   async setSetting(key: string, value: number): Promise<void> {
+    if (!this.teamId) throw new Error('Team not authenticated');
+
+    const compositeKey = `${this.teamId}_${key}`;
     const { error } = await supabase
       .from("settings")
-      .upsert({ key, value }, { onConflict: "key" });
+      .upsert({ key: compositeKey, value }, { onConflict: "key" });
 
     if (error) throw error;
   }

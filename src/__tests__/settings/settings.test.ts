@@ -15,12 +15,13 @@ describe('SupabaseService - Settings', () => {
 
   beforeEach(() => {
     service = new SupabaseService();
+    service.setTeamId('test-team-id');
     vi.clearAllMocks();
   });
 
   it('should get setting', async () => {
-    const mockSingle = vi.fn(() => ({ data: { value: 42 }, error: null }));
-    const mockEq = vi.fn(() => ({ single: mockSingle }));
+    const mockMaybeSingle = vi.fn(() => ({ data: { value: 42 }, error: null }));
+    const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
     const mockSelect = vi.fn(() => ({ eq: mockEq }));
 
     (supabase.from as unknown as MockSupabaseFrom).mockReturnValue({
@@ -29,11 +30,12 @@ describe('SupabaseService - Settings', () => {
 
     const value = await service.getSetting('test-key');
     expect(value).toBe(42);
+    expect(mockEq).toHaveBeenCalledWith('key', 'test-team-id_test-key');
   });
 
   it('should return undefined for non-existent setting', async () => {
-    const mockSingle = vi.fn(() => ({ data: null, error: { code: 'PGRST116' } }));
-    const mockEq = vi.fn(() => ({ single: mockSingle }));
+    const mockMaybeSingle = vi.fn(() => ({ data: null, error: null }));
+    const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
     const mockSelect = vi.fn(() => ({ eq: mockEq }));
 
     (supabase.from as unknown as MockSupabaseFrom).mockReturnValue({
@@ -42,6 +44,7 @@ describe('SupabaseService - Settings', () => {
 
     const value = await service.getSetting('non-existent');
     expect(value).toBeUndefined();
+    expect(mockEq).toHaveBeenCalledWith('key', 'test-team-id_non-existent');
   });
 
   it('should set setting', async () => {
@@ -52,6 +55,6 @@ describe('SupabaseService - Settings', () => {
     });
 
     await expect(service.setSetting('test-key', 42)).resolves.toBeUndefined();
-    expect(mockUpsert).toHaveBeenCalledWith({ key: 'test-key', value: 42 }, { onConflict: 'key' });
+    expect(mockUpsert).toHaveBeenCalledWith({ key: 'test-team-id_test-key', value: 42 }, { onConflict: 'key' });
   });
 });
