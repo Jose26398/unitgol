@@ -137,11 +137,16 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
     // Line: evolution of accumulated score by player
     if (stat === 'scoreEvolution') {
+      const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+        const sa = playerStats.find(p => p.id === a.id);
+        const sb = playerStats.find(p => p.id === b.id);
+        return (sb ? calculateScore(sb) : 0) - (sa ? calculateScore(sa) : 0);
+      }).slice(0, 10);
       setChartMode('line');
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: chartPlayers.map((p, i) => {
+        datasets: sortedPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -154,8 +159,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               acc += score;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -183,11 +188,16 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
     // Line chart: accumulated matches played by player
     if ((stat === 'matches' && useLine) || stat === 'mostGames') {
+      const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+        const sa = playerStats.find(p => p.id === a.id);
+        const sb = playerStats.find(p => p.id === b.id);
+        return (sb ? sb.matches : 0) - (sa ? sa.matches : 0);
+      }).slice(0, 10);
       setChartMode('line');
       setChartStat('matches');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: chartPlayers.map((p, i) => {
+        datasets: sortedPlayers.map((p, i) => {
           let acc = 0;
           return {
             label: p.name,
@@ -196,8 +206,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               if (played) acc++;
               return acc;
             }),
-            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -289,11 +299,16 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
     // Line chart: average goals per match by player
     if (stat === 'avgGoals') {
+      const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+        const sa = playerStats.find(p => p.id === a.id);
+        const sb = playerStats.find(p => p.id === b.id);
+        return (sb ? sb.goals : 0) - (sa ? sa.goals : 0);
+      }).slice(0, 10);
       setChartMode('line');
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: chartPlayers.map((p, i) => {
+        datasets: sortedPlayers.map((p, i) => {
           let played = 0;
           let goals = 0;
           return {
@@ -306,8 +321,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               }
               return played ? goals / played : 0;
             }),
-            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -317,11 +332,16 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
     // Line chart: average assists per match by player
     if (stat === 'avgAssists') {
+      const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+        const sa = playerStats.find(p => p.id === a.id);
+        const sb = playerStats.find(p => p.id === b.id);
+        return (sb ? sb.assists : 0) - (sa ? sa.assists : 0);
+      }).slice(0, 10);
       setChartMode('line');
       setChartStat('assists');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: chartPlayers.map((p, i) => {
+        datasets: sortedPlayers.map((p, i) => {
           let played = 0;
           let assists = 0;
           return {
@@ -334,8 +354,8 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
               }
               return played ? assists / played : 0;
             }),
-            borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
-            backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
+            borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
+            backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
             tension: 0.3,
           };
         })
@@ -345,19 +365,24 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 
     // Line chart: score per match by player (efficiency)
     if (stat === 'efficiency') {
+      const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+        const sa = playerStats.find(p => p.id === a.id);
+        const sb = playerStats.find(p => p.id === b.id);
+        return (sb ? calculateScore(sb) : 0) - (sa ? calculateScore(sa) : 0);
+      }).slice(0, 10);
       setChartMode('line');
       setChartStat('goals');
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
-        datasets: chartPlayers.map((p, i) => ({
+        datasets: sortedPlayers.map((p, i) => ({
           label: p.name,
           data: matchesChrono.map(m => {
             const goals = m.goals.filter(g => g.playerId === p.id).length;
             const assists = m.goals.filter(g => g.assistById === p.id).length;
             return calculateScore({ ...p, goals, assists, matches: 1, wins: 0, losses: 0 });
           }),
-          borderColor: `hsl(${i * 360 / chartPlayers.length},70%,50%)`,
-          backgroundColor: `hsla(${i * 360 / chartPlayers.length},70%,50%,0.3)`,
+          borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
+          backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
           tension: 0.3,
         }))
       });

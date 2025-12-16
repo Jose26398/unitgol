@@ -1,5 +1,5 @@
 import { LogOut, Settings } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MatchCard } from './components/Matches/MatchCard';
 import { NewMatchForm } from './components/NewMatch/NewMatchForm';
 import { NewPlayerForm } from './components/Players/NewPlayerForm';
@@ -13,9 +13,16 @@ import { SeasonStats } from './components/Seasons/SeasonStats';
 import { SeasonsManager } from './components/Seasons/SeasonsManager';
 import { useAuth } from './auth/hook';
 import { AuthForm } from './components/Auth/AuthForm';
+import { loadScoreFactors } from './utils/playerStats';
 
 function App() {
   const { isAuthenticated, teamAuth, logout } = useAuth();
+
+  useEffect(() => {
+    if (teamAuth) {
+      loadScoreFactors(teamAuth.id);
+    }
+  }, [teamAuth]);
 
   const { players, matches, seasons, loading, error, addPlayer, editPlayer, deletePlayer, addMatch, editMatch, deleteMatch, addSeason, editSeason, deleteSeason } = useDatabase();
   const [activeTab, setActiveTab] = useState<'matches' | 'players' | 'newMatch' | 'generator' | 'seasons'>('seasons');

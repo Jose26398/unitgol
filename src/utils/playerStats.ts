@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { SupabaseService } from '../db/supabase-service';
 import { Player } from '../types';
 
 let goalScoreFactor = 10;
@@ -9,15 +9,15 @@ export const setScoreFactors = (goalFactor: number, assistFactor: number) => {
   assistScoreFactor = assistFactor;
 };
 
-const loadScoreFactors = async () => {
+export const loadScoreFactors = async (teamId: string) => {
+  const db = new SupabaseService();
+  db.setTeamId(teamId);
   const goal = await db.getSetting("goalScoreFactor");
   const assist = await db.getSetting("assistScoreFactor");
 
   goalScoreFactor = goal ?? 10;
   assistScoreFactor = assist ?? 5;
 };
-
-loadScoreFactors();
 
 export const calculateWinRate = (player: Player): number => {
   if (player.matches === 0) return 0;
