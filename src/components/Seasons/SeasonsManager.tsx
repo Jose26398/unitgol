@@ -10,9 +10,10 @@ interface SeasonsManagerProps {
   onDeleteSeason: (id: string) => void;
   selectedSeasonId?: string | null;
   onSelectSeason?: (seasonId: string) => void;
+  isAdmin: boolean;
 }
 
-export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSeason, selectedSeasonId, onSelectSeason }: SeasonsManagerProps) {
+export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSeason, selectedSeasonId, onSelectSeason, isAdmin }: SeasonsManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Omit<Season, 'id'>>({ name: '', startDate: '', endDate: '' });
   const [editId, setEditId] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Temporadas</h2>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded-sm" onClick={() => { setShowForm(true); setEditId(null); }}>Nueva Temporada</button>
+        {isAdmin && <button className="bg-emerald-600 text-white px-4 py-2 rounded-sm" onClick={() => { setShowForm(true); setEditId(null); }}>Nueva Temporada</button>}
       </div>
       {showForm && (
         <form className="mb-6 space-y-2" onSubmit={handleSubmit}>
@@ -81,26 +82,28 @@ export function SeasonsManager({ seasons, onAddSeason, onEditSeason, onDeleteSea
               <div className="font-semibold">{season.name}</div>
               <div className="text-sm text-gray-500">{season.startDate} {season.endDate ? `- ${season.endDate}` : ''}</div>
             </div>
-            <div className="flex gap-4 mr-4">
-              <button className="text-emerald-600" onClick={e => { e.stopPropagation(); handleEdit(season); }}>
-                <Edit className="inline-block w-5 h-5" />
-              </button>
-              <button className="text-red-500" onClick={e => { e.stopPropagation(); setDeleteId(season.id); }}>
-                <Trash2 className="inline-block w-5 h-5" />
-              </button>
-      <ConfirmDeleteModal
-        open={!!deleteId}
-        title="¿Eliminar temporada?"
-        message="¿Estás seguro de que deseas eliminar esta temporada? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        onCancel={() => setDeleteId(null)}
-        onConfirm={() => {
-          if (deleteId) onDeleteSeason(deleteId);
-          setDeleteId(null);
-        }}
-      />
-            </div>
+            {isAdmin && (
+              <div className="flex gap-4 mr-4">
+                <button className="text-emerald-600" onClick={e => { e.stopPropagation(); handleEdit(season); }}>
+                  <Edit className="inline-block w-5 h-5" />
+                </button>
+                <button className="text-red-500" onClick={e => { e.stopPropagation(); setDeleteId(season.id); }}>
+                  <Trash2 className="inline-block w-5 h-5" />
+                </button>
+                <ConfirmDeleteModal
+                  open={!!deleteId}
+                  title="¿Eliminar temporada?"
+                  message="¿Estás seguro de que deseas eliminar esta temporada? Esta acción no se puede deshacer."
+                  confirmText="Eliminar"
+                  cancelText="Cancelar"
+                  onCancel={() => setDeleteId(null)}
+                  onConfirm={() => {
+                    if (deleteId) onDeleteSeason(deleteId);
+                    setDeleteId(null);
+                  }}
+                />
+              </div>
+            )}
           </li>
         ))}
       </ul>

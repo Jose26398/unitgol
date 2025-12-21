@@ -62,7 +62,7 @@ function App() {
           <h1 className="text-2xl font-bold flex-1">UnitGol</h1>
           {isAuthenticated && (
             <div className="flex items-center gap-4">
-              <span className="text-gray-100">{teamAuth?.team}</span>
+              <span className="text-gray-100">{teamAuth?.team} {teamAuth?.isAdmin ? '(Admin)' : ''}</span>
               <button
                 className="bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700"
                 onClick={openSettingsModal}
@@ -138,6 +138,7 @@ function App() {
                         onDeleteSeason={deleteSeason}
                         selectedSeasonId={selectedSeasonId}
                         onSelectSeason={setSelectedSeasonId}
+                        isAdmin={teamAuth?.isAdmin || false}
                       />
                     </div>
                     {selectedSeasonId && (
@@ -151,7 +152,7 @@ function App() {
                     {(matches.filter((m: Match) => !selectedSeasonId || m.seasonId === selectedSeasonId).length > 0) ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {matches.filter((m: Match) => !selectedSeasonId || m.seasonId === selectedSeasonId).map((match: Match) => (
-                          <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} />
+                          <MatchCard key={match.id} match={match} onEdit={editMatch} onDelete={deleteMatch} isAdmin={teamAuth?.isAdmin || false} />
                         ))}
                       </div>
                     ) : (
@@ -169,7 +170,7 @@ function App() {
                       >
                         Tabla Resumen
                       </button>
-                      <NewPlayerForm onAddPlayer={addPlayer} selectedSeasonId={selectedSeasonId} />
+                      {teamAuth?.isAdmin && <NewPlayerForm onAddPlayer={addPlayer} selectedSeasonId={selectedSeasonId} />}
                     </div>
                     {(players.filter((p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId).length > 0) ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -186,6 +187,7 @@ function App() {
                               onEdit={editPlayer}
                               onDelete={deletePlayer}
                               seasons={seasons}
+                              isAdmin={teamAuth?.isAdmin || false}
                             />
                           ))}
                       </div>
@@ -197,9 +199,13 @@ function App() {
 
                 {activeTab === 'newMatch' && (
                   <>
-                    <div className="space-y-6">
-                      <NewMatchForm players={players} onAddMatch={addMatch} selectedSeasonId={selectedSeasonId} />
-                    </div>
+                    {teamAuth?.isAdmin ? (
+                      <div className="space-y-6">
+                        <NewMatchForm players={players} onAddMatch={addMatch} selectedSeasonId={selectedSeasonId} />
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500">Solo los administradores pueden crear partidos.</div>
+                    )}
                   </>
                 )}
 

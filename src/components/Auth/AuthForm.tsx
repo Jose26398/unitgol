@@ -5,6 +5,7 @@ export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [teamName, setTeamName] = useState('');
   const [teamCode, setTeamCode] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +32,7 @@ export function AuthForm() {
           setError('Por favor, introduce un email válido');
           return;
         }
-        if (await register(teamName, teamCode, email)) {
+        if (await register(teamName, teamCode, adminCode, email)) {
           setError('');
         } else {
           setError('Error al registrar el equipo. El nombre o email podría estar en uso.');
@@ -83,6 +84,20 @@ export function AuthForm() {
 
         {!isLogin && (
           <>
+            <div>
+              <label htmlFor="adminCode" className="block text-gray-700">
+                Código de administrador
+              </label>
+              <input
+                type="password"
+                id="adminCode"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                className="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-xs focus:border-emerald-500 focus:ring-emerald-500"
+                placeholder="••••••••"
+                required
+              />
+            </div>
             <div>
               <label htmlFor="email" className="block text-gray-700">
                 Email

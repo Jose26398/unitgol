@@ -9,9 +9,10 @@ interface PlayerCardProps {
   onDelete?: (id: string) => void;
   onEdit?: (id: string, updatedData: Partial<Omit<Player, 'id'>>) => void;
   seasons?: Season[];
+  isAdmin: boolean;
 }
 
-export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProps) {
+export function PlayerCard({ player, onDelete, onEdit, seasons, isAdmin }: PlayerCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<Omit<Player, 'id'>>>({
     name: player.name,
@@ -55,7 +56,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
           <h3 className='text-xl font-bold text-gray-800'>{player.name}</h3>
         </div>
         <div className='flex items-center gap-3'>
-          {onEdit && (
+          {isAdmin && onEdit && (
             <button
               onClick={handleEdit}
               className='rounded-full text-emerald-600 hover:text-emerald-200 transition-colors'
@@ -65,7 +66,7 @@ export function PlayerCard({ player, onDelete, onEdit, seasons }: PlayerCardProp
               <Edit className='w-5 h-5' />
             </button>
           )}
-          {onDelete && (
+          {isAdmin && onDelete && (
             <button
               onClick={() => setDeleteConfirm(true)}
               className='rounded-full text-red-600 hover:text-red-200 transition-colors'

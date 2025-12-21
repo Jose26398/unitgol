@@ -101,6 +101,32 @@ export interface Database {
           created_at?: string
         }
       }
+      teams: {
+        Row: {
+          id: string
+          name: string
+          code: string
+          admin_code: string
+          email: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          code: string
+          admin_code: string
+          email?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          code?: string
+          admin_code?: string
+          email?: string | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

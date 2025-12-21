@@ -12,16 +12,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('teams')
-        .select('id, name')
+        .select('id, name, admin_code')
         .eq('name', team)
-        .eq('code', code)
         .single();
       
       if (error || !data) {
         return false;
       }
 
-      const auth = { id: data.id, team: data.name };
+      const isAdmin = data.admin_code === code;
+      const isRegularUser = data.code === code;
+
+      if (!isAdmin && !isRegularUser) {
+        return false;
+      }
+
+      const auth = { id: data.id, team: data.name, isAdmin };
       setTeamAuth(auth);
       localStorage.setItem('teamAuth', JSON.stringify(auth));
       return true;
@@ -35,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('teamAuth');
   };
 
-  const register = async (team: string, code: string, email: string) => {
+  const register = async (team: string, code: string, adminCode: string, email: string) => {
     try {
       // First check if team already exists
       const { data: existingTeam } = await supabase
@@ -54,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .insert({
           name: team,
           code: code,
+          admin_code: adminCode,
           email: email
         })
         .select('id, name')
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      const auth = { id: data.id, team: data.name, email: email };
+      const auth = { id: data.id, team: data.name, email: email, isAdmin: true };
       setTeamAuth(auth);
       localStorage.setItem('teamAuth', JSON.stringify(auth));
       return true;

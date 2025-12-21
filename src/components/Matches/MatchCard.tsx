@@ -11,11 +11,12 @@ interface MatchCardProps {
   match: Match;
   onEdit: (match: Match) => void;
   onDelete: (match: Match) => void;
+  isAdmin: boolean;
 }
 
 const GOALS_LIMIT = 5;
 
-export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
+export function MatchCard({ match, onEdit, onDelete, isAdmin }: MatchCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showAllGoals, setShowAllGoals] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -43,22 +44,26 @@ export function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
           <span className="text-sm font-medium">{format(new Date(match.date), 'PPP', { locale: es })}</span>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsEditing(true)}
-            className='rounded-full text-emerald-600 hover:text-emerald-200 transition-colors'
-            title="Editar partido"
-            aria-label="Editar partido"
-          >
-            <Edit className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className='rounded-full text-red-600 hover:text-red-200 transition-colors'
-            title="Eliminar partido"
-            aria-label="Eliminar partido"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className='rounded-full text-emerald-600 hover:text-emerald-200 transition-colors'
+              title="Editar partido"
+              aria-label="Editar partido"
+            >
+              <Edit className="w-5 h-5" />
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={handleDelete}
+              className='rounded-full text-red-600 hover:text-red-200 transition-colors'
+              title="Eliminar partido"
+              aria-label="Eliminar partido"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 

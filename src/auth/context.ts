@@ -4,13 +4,14 @@ export interface TeamAuth {
   id: string;
   team: string;
   email?: string;
+  isAdmin: boolean;
 }
 
 export interface AuthContextType {
   teamAuth: TeamAuth | null;
   isAuthenticated: boolean;
   login: (team: string, code: string) => Promise<boolean>;
-  register: (team: string, code: string, email: string) => Promise<boolean>;
+  register: (team: string, code: string, adminCode: string, email: string) => Promise<boolean>;
   logout: () => void;
 }
 
