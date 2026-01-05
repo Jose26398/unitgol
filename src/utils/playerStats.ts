@@ -74,7 +74,10 @@ export const generateBalancedTeams = (players: Player[]): { teamA: Player[]; tea
   const totalPlayers = sortedPlayers.length;
   const totalScore = sortedPlayers.reduce((sum, player) => sum + calculateScore(player), 0);
 
-  const teamsSize = Math.floor(totalPlayers / 2);
+  // Determine the exact team sizes
+  // If total is even: both teams have totalPlayers / 2
+  // If total is odd: one team has floor(totalPlayers / 2), the other has ceil(totalPlayers / 2)
+  const teamASize = Math.ceil(totalPlayers / 2);
   let bestDiff = Infinity;
   let bestMask = 0;
 
@@ -91,8 +94,8 @@ export const generateBalancedTeams = (players: Player[]): { teamA: Player[]; tea
       }
     }
 
-    // Only consider subsets with the correct size
-    if (subset.length === teamsSize || subset.length === teamsSize + 1) {
+    // Only consider subsets with the exact team size
+    if (subset.length === teamASize) {
       const diff = Math.abs(totalScore - 2 * subsetScore);
       if (diff < bestDiff) {
         bestDiff = diff;
