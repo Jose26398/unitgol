@@ -147,17 +147,31 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       setDetailChart({
         labels: matchesChrono.map(m => new Date(m.date).toLocaleDateString()),
         datasets: sortedPlayers.map((p, i) => {
-          let acc = 0;
+          let cumGoals = 0;
+          let cumAssists = 0;
+          let cumMatches = 0;
+          let cumWins = 0;
+          let cumLosses = 0;
           return {
             label: p.name,
             data: matchesChrono.map(m => {
-              // Score for this match only
-              const goals = m.goals.filter(g => g.playerId === p.id).length;
-              const assists = m.goals.filter(g => g.assistById === p.id).length;
               const played = m.teamA.players.some(pl => pl.id === p.id) || m.teamB.players.some(pl => pl.id === p.id);
-              const score = played ? calculateScore({ ...p, goals, assists, matches: 1, wins: 0, losses: 0 }) : 0;
-              acc += score;
-              return acc;
+              if (played) {
+                cumMatches++;
+                const goalsInMatch = m.goals.filter(g => g.playerId === p.id).length;
+                const assistsInMatch = m.goals.filter(g => g.assistById === p.id).length;
+                cumGoals += goalsInMatch;
+                cumAssists += assistsInMatch;
+                // Determine win/loss
+                const isA = m.teamA.players.some(pl => pl.id === p.id);
+                const isB = m.teamB.players.some(pl => pl.id === p.id);
+                if (isA && m.teamA.score > m.teamB.score) cumWins++;
+                if (isB && m.teamB.score > m.teamA.score) cumWins++;
+                if (isA && m.teamA.score < m.teamB.score) cumLosses++;
+                if (isB && m.teamB.score < m.teamA.score) cumLosses++;
+              }
+              const score = cumMatches > 0 ? calculateScore({ ...p, goals: cumGoals, assists: cumAssists, matches: cumMatches, wins: cumWins, losses: cumLosses }) : 0;
+              return score;
             }),
             borderColor: `hsl(${i * 360 / sortedPlayers.length},70%,50%)`,
             backgroundColor: `hsla(${i * 360 / sortedPlayers.length},70%,50%,0.3)`,
@@ -406,7 +420,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
       });
       return;
     }
-  }, [players, playerStats, matchesChrono]);
+  }, [filteredPlayers, playerStats, matchesChrono]);
 
 
   // Default selection: best player (score)
