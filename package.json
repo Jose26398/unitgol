@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.1.0",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite",
     "generate-robots": "pnpx ejs-cli public/robots.txt.ejs -o .",
