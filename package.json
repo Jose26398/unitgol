@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "chart.js": "^4.5.0",
+    "chart.js": "4.5.1",
     "date-fns": "4.4.0",
     "dexie": "4.4.4",
     "dexie-react-hooks": "4.4.0",
@@ -23,16 +23,15 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@types/chart.js": "^4.0.1",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/react": "19.2.18",
-    "@types/react-chartjs-2": "^2.5.7",
     "@types/react-dom": "19.2.4",
     "@vitejs/plugin-react": "6.0.5",
-    "autoprefixer": "10.5.4",
     "eslint": "10.8.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.3",
     "globals": "17.9.0",
+    "jsdom": "30.0.1",
     "postcss": "8.5.25",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
