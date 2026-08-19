@@ -21,7 +21,8 @@ export const loadScoreFactors = async (teamId: string) => {
 
 export const calculateWinRate = (player: Player): number => {
   if (player.matches === 0) return 0;
-  return (player.wins / player.matches) * 100;
+  const draws = player.matches - player.wins - player.losses;
+  return ((player.wins + draws * 0.5) / player.matches) * 100;
 };
 
 /**
