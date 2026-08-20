@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: false
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-react@6.1.0'
+  - vite@8.2.2
