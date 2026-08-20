@@ -1,121 +1,136 @@
-import { SupabaseService } from '../db/supabase-service';
-import { Player } from '../types';
+import { supabaseService } from "@/db/supabase-service";
+import type { Player } from "@/types";
 
 let goalScoreFactor = 10;
 let assistScoreFactor = 5;
 
 export const setScoreFactors = (goalFactor: number, assistFactor: number) => {
-  goalScoreFactor = goalFactor;
-  assistScoreFactor = assistFactor;
+	goalScoreFactor = goalFactor;
+	assistScoreFactor = assistFactor;
 };
 
 export const loadScoreFactors = async (teamId: string) => {
-  const db = new SupabaseService();
-  db.setTeamId(teamId);
-  const goal = await db.getSetting("goalScoreFactor");
-  const assist = await db.getSetting("assistScoreFactor");
+	supabaseService.setTeamId(teamId);
+	const goal = await supabaseService.getSetting("goalScoreFactor");
+	const assist = await supabaseService.getSetting("assistScoreFactor");
 
-  goalScoreFactor = goal ?? 10;
-  assistScoreFactor = assist ?? 5;
+	goalScoreFactor = goal ?? 10;
+	assistScoreFactor = assist ?? 5;
 };
 
 export const calculateWinRate = (player: Player): number => {
-  if (player.matches === 0) return 0;
-  const draws = player.matches - player.wins - player.losses;
-  return ((player.wins + draws * 0.5) / player.matches) * 100;
+	if (player.matches === 0) return 0;
+	const draws = player.matches - player.wins - player.losses;
+	return ((player.wins + draws * 0.5) / player.matches) * 100;
 };
 
 /**
  * Adjusts a stat based on the number of matches played.
- * 
+ *
  * @param stat The stat to adjust.
  * @param matches The number of matches played.
  * @param scale The scale of the adjustment. Defaults to 10.
  * @returns The adjusted stat.
  */
-const adjustForMatches = (stat: number, matches: number, scale: number = 10): number => {
-  return stat * (1 - Math.exp(-matches / scale));
+const adjustForMatches = (
+	stat: number,
+	matches: number,
+	scale: number = 10,
+): number => {
+	return stat * (1 - Math.exp(-matches / scale));
 };
 
 /**
  * Calculates the score of a player based on their win rate, goals per game, and assists per game.
- * 
+ *
  * @param player The player to calculate the score for.
  * @returns The score of the player.
  */
 export const calculateScore = (player: Player): number => {
-  const winRate = calculateWinRate(player);
+	const winRate = calculateWinRate(player);
 
-  const goalsPerGame = player.matches > 0 ? player.goals / player.matches : 0;
-  const assistsPerGame = player.matches > 0 ? player.assists / player.matches : 0;
+	const goalsPerGame = player.matches > 0 ? player.goals / player.matches : 0;
+	const assistsPerGame =
+		player.matches > 0 ? player.assists / player.matches : 0;
 
-  const adjustedWinRate = adjustForMatches(winRate, player.matches);
-  const adjustedGoals = adjustForMatches(goalsPerGame, player.matches);
-  const adjustedAssists = adjustForMatches(assistsPerGame, player.matches);
+	const adjustedWinRate = adjustForMatches(winRate, player.matches);
+	const adjustedGoals = adjustForMatches(goalsPerGame, player.matches);
+	const adjustedAssists = adjustForMatches(assistsPerGame, player.matches);
 
-  return adjustedWinRate * 0.7 + adjustedGoals * goalScoreFactor + adjustedAssists * assistScoreFactor;
+	return (
+		adjustedWinRate * 0.7 +
+		adjustedGoals * goalScoreFactor +
+		adjustedAssists * assistScoreFactor
+	);
 };
 
 /**
  * Calculates the total score of a list of players.
- * 
+ *
  * @param players The players to calculate the total score for.
  * @returns The total score of the players.
  */
-export const totalScore = (players: Player[]): number => players.reduce((acc, player) => acc + calculateScore(player), 0);
+export const totalScore = (players: Player[]): number =>
+	players.reduce((acc, player) => acc + calculateScore(player), 0);
 
 /**
  * Generates a balanced team based on the player's score.
- * 
+ *
  * @param players The players to generate the team from.
  * @returns The balanced team.
  */
-export const generateBalancedTeams = (players: Player[]): { teamA: Player[]; teamB: Player[] } => {
-  const sortedPlayers = [...players].sort((a, b) => calculateScore(b) - calculateScore(a));
-  const totalPlayers = sortedPlayers.length;
-  const totalScore = sortedPlayers.reduce((sum, player) => sum + calculateScore(player), 0);
+export const generateBalancedTeams = (
+	players: Player[],
+): { teamA: Player[]; teamB: Player[] } => {
+	const sortedPlayers = [...players].sort(
+		(a, b) => calculateScore(b) - calculateScore(a),
+	);
+	const totalPlayers = sortedPlayers.length;
+	const totalScore = sortedPlayers.reduce(
+		(sum, player) => sum + calculateScore(player),
+		0,
+	);
 
-  // Determine the exact team sizes
-  // If total is even: both teams have totalPlayers / 2
-  // If total is odd: one team has floor(totalPlayers / 2), the other has ceil(totalPlayers / 2)
-  const teamASize = Math.ceil(totalPlayers / 2);
-  let bestDiff = Infinity;
-  let bestMask = 0;
+	// Determine the exact team sizes
+	// If total is even: both teams have totalPlayers / 2
+	// If total is odd: one team has floor(totalPlayers / 2), the other has ceil(totalPlayers / 2)
+	const teamASize = Math.ceil(totalPlayers / 2);
+	let bestDiff = Infinity;
+	let bestMask = 0;
 
-  // We iterate over all possible subsets with the correct size
-  const totalSubsets = 1 << totalPlayers;
-  for (let mask = 0; mask < totalSubsets; mask++) {
-    const subset: Player[] = [];
-    let subsetScore = 0;
+	// We iterate over all possible subsets with the correct size
+	const totalSubsets = 1 << totalPlayers;
+	for (let mask = 0; mask < totalSubsets; mask++) {
+		const subset: Player[] = [];
+		let subsetScore = 0;
 
-    for (let i = 0; i < totalPlayers; i++) {
-      if (mask & (1 << i)) {
-        subset.push(sortedPlayers[i]);
-        subsetScore += calculateScore(sortedPlayers[i]);
-      }
-    }
+		for (let i = 0; i < totalPlayers; i++) {
+			if (mask & (1 << i)) {
+				subset.push(sortedPlayers[i]);
+				subsetScore += calculateScore(sortedPlayers[i]);
+			}
+		}
 
-    // Only consider subsets with the exact team size
-    if (subset.length === teamASize) {
-      const diff = Math.abs(totalScore - 2 * subsetScore);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        bestMask = mask;
-      }
-    }
-  }
+		// Only consider subsets with the exact team size
+		if (subset.length === teamASize) {
+			const diff = Math.abs(totalScore - 2 * subsetScore);
+			if (diff < bestDiff) {
+				bestDiff = diff;
+				bestMask = mask;
+			}
+		}
+	}
 
-  // Build the teams from the best combination found
-  const teamA: Player[] = [];
-  const teamB: Player[] = [];
-  for (let i = 0; i < totalPlayers; i++) {
-    if (bestMask & (1 << i)) {
-      teamA.push(sortedPlayers[i]);
-    } else {
-      teamB.push(sortedPlayers[i]);
-    }
-  }
+	// Build the teams from the best combination found
+	const teamA: Player[] = [];
+	const teamB: Player[] = [];
+	for (let i = 0; i < totalPlayers; i++) {
+		if (bestMask & (1 << i)) {
+			teamA.push(sortedPlayers[i]);
+		} else {
+			teamB.push(sortedPlayers[i]);
+		}
+	}
 
-  return { teamA, teamB };
+	return { teamA, teamB };
 };
-
