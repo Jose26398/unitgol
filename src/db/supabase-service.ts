@@ -1,697 +1,106 @@
-import { supabase } from "./supabase";
-import type { Player, Match, Season } from "../types";
-import type { MatchWithRelations, MatchPlayerRow, GoalRow } from "./types";
+import type { Match, Player, Season } from "../types";
+import { MatchRepository } from "./repositories/MatchRepository";
+import { PlayerRepository } from "./repositories/PlayerRepository";
+import { SeasonRepository } from "./repositories/SeasonRepository";
+import { SettingsRepository } from "./repositories/SettingsRepository";
 
 export class SupabaseService {
-  private teamId: string | null = null;
-
-  setTeamId(id: string) {
-    this.teamId = id;
-  }
-
-  // Players
-  async addPlayer(name: string, seasonId?: string): Promise<string> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data, error } = await supabase
-      .from("players")
-      .insert({
-        name,
-        matches: 0,
-        wins: 0,
-        losses: 0,
-        goals: 0,
-        assists: 0,
-        season_id: seasonId || null,
-        team_id: this.teamId
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data.id;
-  }
-
-  async updatePlayer(
-    id: string,
-    updatedData: Partial<Omit<Player, "id">>
-  ): Promise<void> {
-    const { seasonId, ...data } = updatedData;
-    const { error } = await supabase
-      .from("players")
-      .update({
-        ...data,
-        season_id: seasonId
-      })
-      .eq("id", id);
-
-    if (error) throw error;
-  }
-
-  async getAllPlayers(): Promise<Player[]> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data, error } = await supabase
-      .from("players")
-      .select(`
-        id,
-        name,
-        matches,
-        wins,
-        losses,
-        goals,
-        assists,
-        season_id,
-        seasons (
-          id,
-          name,
-          start_date,
-          end_date
-        )
-      `)
-      .eq('team_id', this.teamId);
-
-    if (error) throw error;
-    return data.map(player => ({
-      id: player.id,
-      name: player.name,
-      matches: player.matches,
-      wins: player.wins,
-      losses: player.losses,
-      goals: player.goals,
-      assists: player.assists,
-      seasonId: player.season_id || undefined
-    }));
-  }
-
-  async deletePlayer(id: string): Promise<void> {
-    const { error } = await supabase.from("players").delete().eq("id", id);
-    if (error) throw error;
-  }
-
-  async updatePlayerStats(id: string, stats: Partial<Player>, seasonId?: string): Promise<void> {
-    console.log('updatePlayerStats called for player:', id, 'with stats:', stats, 'seasonId:', seasonId);
-
-    const { data: currentStats, error: statsError } = await supabase
-      .from("players")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (statsError) throw statsError;
-
-    console.log('Current stats for player:', id, currentStats);
-
-    const statsToUpdate = {
-      matches: (currentStats.matches || 0) + (stats.matches || 0),
-      wins: (currentStats.wins || 0) + (stats.wins || 0),
-      losses: (currentStats.losses || 0) + (stats.losses || 0),
-      goals: (currentStats.goals || 0) + (stats.goals || 0),
-      assists: (currentStats.assists || 0) + (stats.assists || 0)
-    };
-
-    console.log('Stats to update:', statsToUpdate);
-
-    // If this is the first match in a season for this player and they don't have a season yet
-    if (seasonId && !currentStats.season_id) {
-      Object.assign(statsToUpdate, { season_id: seasonId });
-      console.log('Setting season_id to:', seasonId);
-    }
-
-    const { error } = await supabase
-      .from("players")
-      .update(statsToUpdate)
-      .eq("id", id);
-
-    if (error) throw error;
-
-    console.log('Player stats updated successfully for:', id);
-  }
-
-  // Matches
-  async addMatch(match: Omit<Match, "id">): Promise<string> {
-    console.log('addMatch called with match data:', match);
-
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data: matchData, error: matchError } = await supabase
-      .from("matches")
-      .insert({
-        date: match.date,
-        season_id: match.seasonId || null,
-        team_a_score: match.teamA.score,
-        team_b_score: match.teamB.score,
-        team_id: this.teamId
-      })
-      .select()
-      .single();
-
-    if (matchError) throw matchError;
-
-    const matchId = matchData.id;
-    console.log('Match created with id:', matchId);
-
-    const matchPlayers = [
-      ...match.teamA.players.map((player) => ({
-        match_id: matchId,
-        player_id: player.id,
-        team: "A" as const
-      })),
-      ...match.teamB.players.map((player) => ({
-        match_id: matchId,
-        player_id: player.id,
-        team: "B" as const
-      }))
-    ];
-
-    const { error: playersError } = await supabase
-      .from("match_players")
-      .insert(matchPlayers);
-
-    if (playersError) throw playersError;
-
-    if (match.goals.length > 0) {
-      const { error: goalsError } = await supabase.from("goals").insert(
-        match.goals.map((goal) => ({
-          match_id: matchId,
-          player_id: goal.playerId,
-          assist_by_id: goal.assistById || null,
-          minute: goal.minute
-        }))
-      );
-
-      if (goalsError) throw goalsError;
-    }
-
-    // Update player stats
-    const fullMatch: Match = {
-      id: matchId,
-      date: match.date,
-      seasonId: match.seasonId,
-      teamA: match.teamA,
-      teamB: match.teamB,
-      goals: match.goals
-    };
-    console.log('Calling addMatchStats for match:', matchId);
-    await this.addMatchStats(fullMatch);
-
-    return matchId;
-  }
-
-  async getAllMatches(): Promise<Match[]> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data: matches, error: matchesError } = await supabase
-      .from("matches")
-      .select(`
-        id,
-        date,
-        season_id,
-        team_a_score,
-        team_b_score,
-        match_players (
-          team,
-          players (
-            id,
-            name,
-            matches,
-            wins,
-            losses,
-            goals,
-            assists,
-            season_id
-          )
-        ),
-        goals (
-          id,
-          player_id,
-          assist_by_id,
-          minute
-        )
-      `)
-      .eq('team_id', this.teamId)
-      .order("date", { ascending: false });
-
-    if (matchesError) throw matchesError;
-
-    return matches.map((match: MatchWithRelations) => {
-      const teamAPlayers = match.match_players
-        .filter(mp => mp.team === "A")
-        .map(mp => ({
-          id: mp.players.id,
-          name: mp.players.name,
-          matches: mp.players.matches,
-          wins: mp.players.wins,
-          losses: mp.players.losses,
-          goals: mp.players.goals,
-          assists: mp.players.assists,
-          seasonId: mp.players.season_id || undefined
-        }));
-
-      const teamBPlayers = match.match_players
-        .filter(mp => mp.team === "B")
-        .map(mp => ({
-          id: mp.players.id,
-          name: mp.players.name,
-          matches: mp.players.matches,
-          wins: mp.players.wins,
-          losses: mp.players.losses,
-          goals: mp.players.goals,
-          assists: mp.players.assists,
-          seasonId: mp.players.season_id || undefined
-        }));
-
-      return {
-        id: match.id,
-        date: match.date,
-        seasonId: match.season_id || undefined,
-        teamA: {
-          players: teamAPlayers,
-          score: match.team_a_score,
-        },
-        teamB: {
-          players: teamBPlayers,
-          score: match.team_b_score,
-        },
-        goals: match.goals.map(g => ({
-          playerId: g.player_id,
-          minute: g.minute,
-          assistById: g.assist_by_id || undefined,
-        })),
-      };
-    });
-  }
-
-  async deleteMatch(id: string): Promise<void> {
-    console.log('deleteMatch called for match:', id);
-
-    // Get the match to subtract stats
-    const match = await this.getMatchById(id);
-    console.log('Match retrieved for deletion:', match);
-
-    if (match) {
-      console.log('Calling subtractMatchStats for match:', id);
-      await this.subtractMatchStats(match);
-    }
-
-    // First delete the goals
-    const { error: goalsError } = await supabase
-      .from("goals")
-      .delete()
-      .eq("match_id", id);
-
-    if (goalsError) throw goalsError;
-
-    // Then delete match players
-    const { error: playersError } = await supabase
-      .from("match_players")
-      .delete()
-      .eq("match_id", id);
-
-    if (playersError) throw playersError;
-
-    // Finally delete the match
-    const { error } = await supabase
-      .from("matches")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
-
-    console.log('Match deleted successfully:', id);
-  }
-
-  async editMatch(match: Match): Promise<void> {
-    console.log('editMatch called with match:', match);
-
-    // Get the current match to calculate stats to subtract
-    const currentMatch = await this.getMatchById(match.id);
-    console.log('currentMatch retrieved:', currentMatch);
-    if (!currentMatch) throw new Error('Match not found');
-
-    // Calculate and subtract old stats
-    if (currentMatch) {
-      console.log('subtracting stats for currentMatch');
-      await this.subtractMatchStats(currentMatch);
-    }
-
-    // Update match
-    const { error: matchError } = await supabase
-      .from("matches")
-      .update({
-        date: match.date,
-        season_id: match.seasonId || null,
-        team_a_score: match.teamA.score,
-        team_b_score: match.teamB.score
-      })
-      .eq("id", match.id);
-
-    if (matchError) throw matchError;
-
-    // Delete old match players and goals
-    const { error: deletePlayersError } = await supabase
-      .from("match_players")
-      .delete()
-      .eq("match_id", match.id);
-
-    if (deletePlayersError) throw deletePlayersError;
-
-    const { error: deleteGoalsError } = await supabase
-      .from("goals")
-      .delete()
-      .eq("match_id", match.id);
-
-    if (deleteGoalsError) throw deleteGoalsError;
-
-    // Insert new match players
-    const matchPlayers = [
-      ...match.teamA.players.map((player) => ({
-        match_id: match.id,
-        player_id: player.id,
-        team: "A" as const
-      })),
-      ...match.teamB.players.map((player) => ({
-        match_id: match.id,
-        player_id: player.id,
-        team: "B" as const
-      }))
-    ];
-
-    const { error: playersError } = await supabase
-      .from("match_players")
-      .insert(matchPlayers);
-
-    if (playersError) throw playersError;
-
-    // Insert new goals
-    if (match.goals.length > 0) {
-      const { error: goalsError } = await supabase
-        .from("goals")
-        .insert(
-          match.goals.map((goal) => ({
-            match_id: match.id,
-            player_id: goal.playerId,
-            assist_by_id: goal.assistById || null,
-            minute: goal.minute
-          }))
-        );
-
-      if (goalsError) throw goalsError;
-    }
-
-    // Calculate and add new stats
-    console.log('adding stats for new match');
-    await this.addMatchStats(match);
-  }
-
-  private async addMatchStats(match: Match): Promise<void> {
-    console.log('addMatchStats called for match:', match.id, 'teamA score:', match.teamA.score, 'teamB score:', match.teamB.score);
-
-    const teamAWon = match.teamA.score > match.teamB.score;
-    const teamBWon = match.teamB.score > match.teamA.score;
-    const isDraw = match.teamA.score === match.teamB.score;
-
-    console.log('Match result - teamAWon:', teamAWon, 'teamBWon:', teamBWon, 'isDraw:', isDraw);
-
-    // Calculate goals and assists per player
-    const playerGoals = new Map<string, number>();
-    const playerAssists = new Map<string, number>();
-
-    match.goals.forEach(goal => {
-      playerGoals.set(goal.playerId, (playerGoals.get(goal.playerId) || 0) + 1);
-      if (goal.assistById) {
-        playerAssists.set(goal.assistById, (playerAssists.get(goal.assistById) || 0) + 1);
-      }
-    });
-
-    console.log('Player goals:', Object.fromEntries(playerGoals));
-    console.log('Player assists:', Object.fromEntries(playerAssists));
-
-    // Update stats for team A players
-    for (const player of match.teamA.players) {
-      const stats = {
-        matches: 1,
-        wins: teamAWon ? 1 : 0,
-        losses: teamBWon ? 1 : 0,
-        goals: playerGoals.get(player.id) || 0,
-        assists: playerAssists.get(player.id) || 0,
-      };
-      console.log('Updating team A player:', player.id, player.name, 'with stats:', stats);
-      await this.updatePlayerStats(player.id, stats, match.seasonId);
-    }
-
-    // Update stats for team B players
-    for (const player of match.teamB.players) {
-      const stats = {
-        matches: 1,
-        wins: teamBWon ? 1 : 0,
-        losses: teamAWon ? 1 : 0,
-        goals: playerGoals.get(player.id) || 0,
-        assists: playerAssists.get(player.id) || 0,
-      };
-      console.log('Updating team B player:', player.id, player.name, 'with stats:', stats);
-      await this.updatePlayerStats(player.id, stats, match.seasonId);
-    }
-  }
-
-  private async subtractMatchStats(match: Match): Promise<void> {
-    console.log('subtractMatchStats called for match:', match.id, 'teamA score:', match.teamA.score, 'teamB score:', match.teamB.score);
-
-    const teamAWon = match.teamA.score > match.teamB.score;
-    const teamBWon = match.teamB.score > match.teamA.score;
-
-    console.log('Subtracting match result - teamAWon:', teamAWon, 'teamBWon:', teamBWon);
-
-    // Calculate goals and assists per player
-    const playerGoals = new Map<string, number>();
-    const playerAssists = new Map<string, number>();
-
-    match.goals.forEach(goal => {
-      playerGoals.set(goal.playerId, (playerGoals.get(goal.playerId) || 0) + 1);
-      if (goal.assistById) {
-        playerAssists.set(goal.assistById, (playerAssists.get(goal.assistById) || 0) + 1);
-      }
-    });
-
-    console.log('Subtracting player goals:', Object.fromEntries(playerGoals));
-    console.log('Subtracting player assists:', Object.fromEntries(playerAssists));
-
-    // Update stats for team A players (subtract)
-    for (const player of match.teamA.players) {
-      const stats = {
-        matches: -1,
-        wins: teamAWon ? -1 : 0,
-        losses: teamBWon ? -1 : 0,
-        goals: -(playerGoals.get(player.id) || 0),
-        assists: -(playerAssists.get(player.id) || 0),
-      };
-      console.log('Subtracting team A player:', player.id, player.name, 'with stats:', stats);
-      await this.updatePlayerStats(player.id, stats, match.seasonId);
-    }
-
-    // Update stats for team B players (subtract)
-    for (const player of match.teamB.players) {
-      const stats = {
-        matches: -1,
-        wins: teamBWon ? -1 : 0,
-        losses: teamAWon ? -1 : 0,
-        goals: -(playerGoals.get(player.id) || 0),
-        assists: -(playerAssists.get(player.id) || 0),
-      };
-      console.log('Subtracting team B player:', player.id, player.name, 'with stats:', stats);
-      await this.updatePlayerStats(player.id, stats, match.seasonId);
-    }
-  }
-
-  async getMatchById(id: string): Promise<Match | undefined> {
-    const { data: match, error: matchError } = await supabase
-      .from("matches")
-      .select(`
-        id,
-        date,
-        season_id,
-        team_a_score,
-        team_b_score,
-        match_players (
-          team,
-          players (
-            id,
-            name,
-            matches,
-            wins,
-            losses,
-            goals,
-            assists,
-            season_id
-          )
-        ),
-        goals (
-          id,
-          player_id,
-          assist_by_id,
-          minute
-        )
-      `)
-      .eq("id", id)
-      .single();
-
-    if (matchError) return undefined;
-
-    const teamAPlayers = match.match_players
-      .filter((mp: MatchPlayerRow) => mp.team === "A" && mp.players)
-      .map((mp: MatchPlayerRow) => ({
-        id: mp.players!.id,
-        name: mp.players!.name,
-        matches: mp.players!.matches,
-        wins: mp.players!.wins,
-        losses: mp.players!.losses,
-        goals: mp.players!.goals,
-        assists: mp.players!.assists,
-        seasonId: mp.players!.season_id || undefined
-      }));
-
-    const teamBPlayers = match.match_players
-      .filter((mp: MatchPlayerRow) => mp.team === "B" && mp.players)
-      .map((mp: MatchPlayerRow) => ({
-        id: mp.players!.id,
-        name: mp.players!.name,
-        matches: mp.players!.matches,
-        wins: mp.players!.wins,
-        losses: mp.players!.losses,
-        goals: mp.players!.goals,
-        assists: mp.players!.assists,
-        seasonId: mp.players!.season_id || undefined
-      }));
-
-    return {
-      id: match.id,
-      date: match.date,
-      seasonId: match.season_id || undefined,
-      teamA: {
-        players: teamAPlayers,
-        score: match.team_a_score,
-      },
-      teamB: {
-        players: teamBPlayers,
-        score: match.team_b_score,
-      },
-      goals: match.goals.map((g: GoalRow) => ({
-        playerId: g.player_id,
-        minute: g.minute,
-        assistById: g.assist_by_id || undefined,
-      })),
-    };
-  }
-  
-  // Seasons
-  async addSeason(season: Omit<Season, "id">): Promise<string> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data, error } = await supabase
-      .from("seasons")
-      .insert({
-        name: season.name,
-        start_date: season.startDate,
-        end_date: season.endDate || null,
-        team_id: this.teamId
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data.id;
-  }
-
-  async updateSeason(season: Season): Promise<void> {
-    const { error } = await supabase
-      .from("seasons")
-      .update({
-        name: season.name,
-        start_date: season.startDate,
-        end_date: season.endDate || null
-      })
-      .eq("id", season.id);
-
-    if (error) throw error;
-  }
-
-  async deleteSeason(id: string): Promise<void> {
-    // First, unlink players from this season
-    const { error: playersError } = await supabase
-      .from("players")
-      .update({ season_id: null })
-      .eq("season_id", id);
-
-    if (playersError) throw playersError;
-
-    // Then delete the season
-    const { error } = await supabase
-      .from("seasons")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
-  }
-
-  async getAllSeasons(): Promise<Season[]> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const { data, error } = await supabase
-      .from("seasons")
-      .select("*")
-      .eq('team_id', this.teamId)
-      .order("start_date", { ascending: false });
-
-    if (error) throw error;
-
-    return data.map(season => ({
-      id: season.id,
-      name: season.name,
-      startDate: season.start_date,
-      endDate: season.end_date || undefined
-    }));
-  }
-
-  async getSeasonById(id: string): Promise<Season | undefined> {
-    const { data, error } = await supabase
-      .from("seasons")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) return undefined;
-
-    return {
-      id: data.id,
-      name: data.name,
-      startDate: data.start_date,
-      endDate: data.end_date || undefined
-    };
-  }
-
-  // Settings
-  async getSetting(key: string): Promise<number | undefined> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const compositeKey = `${this.teamId}_${key}`;
-    const { data, error } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", compositeKey)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data?.value;
-  }
-
-  async setSetting(key: string, value: number): Promise<void> {
-    if (!this.teamId) throw new Error('Team not authenticated');
-
-    const compositeKey = `${this.teamId}_${key}`;
-    const { error } = await supabase
-      .from("settings")
-      .upsert({ key: compositeKey, value }, { onConflict: "key" });
-
-    if (error) throw error;
-  }
+	private teamId: string | null = null;
+
+	private playerRepo: PlayerRepository;
+	private matchRepo: MatchRepository;
+	private seasonRepo: SeasonRepository;
+	private settingsRepo: SettingsRepository;
+
+	constructor() {
+		this.playerRepo = new PlayerRepository();
+		this.matchRepo = new MatchRepository(this.playerRepo);
+		this.seasonRepo = new SeasonRepository();
+		this.settingsRepo = new SettingsRepository();
+	}
+
+	setTeamId(id: string) {
+		this.teamId = id;
+	}
+
+	// Players
+	async addPlayer(name: string, seasonId?: string): Promise<string> {
+		return this.playerRepo.addPlayer(name, seasonId, this.teamId);
+	}
+
+	async updatePlayer(
+		id: string,
+		updatedData: Partial<Omit<Player, "id">>,
+	): Promise<void> {
+		return this.playerRepo.updatePlayer(id, updatedData);
+	}
+
+	async getAllPlayers(): Promise<Player[]> {
+		return this.playerRepo.getAllPlayers(this.teamId);
+	}
+
+	async deletePlayer(id: string): Promise<void> {
+		return this.playerRepo.deletePlayer(id);
+	}
+
+	async updatePlayerStats(
+		id: string,
+		stats: Partial<Player>,
+		seasonId?: string,
+	): Promise<void> {
+		return this.playerRepo.updatePlayerStats(id, stats, seasonId);
+	}
+
+	// Matches
+	async addMatch(match: Omit<Match, "id">): Promise<string> {
+		return this.matchRepo.addMatch(match, this.teamId);
+	}
+
+	async getAllMatches(): Promise<Match[]> {
+		return this.matchRepo.getAllMatches(this.teamId);
+	}
+
+	async deleteMatch(id: string): Promise<void> {
+		return this.matchRepo.deleteMatch(id);
+	}
+
+	async editMatch(match: Match): Promise<void> {
+		return this.matchRepo.editMatch(match);
+	}
+
+	async getMatchById(id: string): Promise<Match | undefined> {
+		return this.matchRepo.getMatchById(id);
+	}
+
+	// Seasons
+	async addSeason(season: Omit<Season, "id">): Promise<string> {
+		return this.seasonRepo.addSeason(season, this.teamId);
+	}
+
+	async updateSeason(season: Season): Promise<void> {
+		return this.seasonRepo.updateSeason(season);
+	}
+
+	async deleteSeason(id: string): Promise<void> {
+		return this.seasonRepo.deleteSeason(id);
+	}
+
+	async getAllSeasons(): Promise<Season[]> {
+		return this.seasonRepo.getAllSeasons(this.teamId);
+	}
+
+	async getSeasonById(id: string): Promise<Season | undefined> {
+		return this.seasonRepo.getSeasonById(id);
+	}
+
+	// Settings
+	async getSetting(key: string): Promise<number | undefined> {
+		return this.settingsRepo.getSetting(key, this.teamId);
+	}
+
+	async setSetting(key: string, value: number): Promise<void> {
+		return this.settingsRepo.setSetting(key, value, this.teamId);
+	}
 }
+
+export const supabaseService = new SupabaseService();

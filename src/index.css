@@ -1,15 +1,15 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
-  --font-sans: Outfit, system-ui, sans-serif;
+	--font-sans: Outfit, system-ui, sans-serif;
 
-  --color-primary: #1eb854;
-  --color-secondary: #6c757d;
-  --color-success: #28a745;
-  --color-info: #17a2b8;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
-  --color-base: #171212;
+	--color-primary: #1eb854;
+	--color-secondary: #6c757d;
+	--color-success: #28a745;
+	--color-info: #17a2b8;
+	--color-warning: #ffc107;
+	--color-danger: #dc3545;
+	--color-base: #171212;
 }
 
 /*
@@ -21,15 +21,15 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentcolor);
+	}
 }
 
 button {
-  cursor: pointer;
+	cursor: pointer;
 }
