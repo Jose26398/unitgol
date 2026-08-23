@@ -6,13 +6,14 @@ import { AuthForm } from "@/features/auth/AuthForm";
 import { useAuth } from "@/features/auth/useAuth";
 import { MatchesView } from "@/features/matches/views/MatchesView";
 import { NewMatchView } from "@/features/new-match/views/NewMatchView";
+import { PlayerComparerModal } from "@/features/players/components/PlayerComparerModal";
 import { PlayerSummaryModal } from "@/features/players/components/PlayerSummaryModal";
 import { PlayersView } from "@/features/players/views/PlayersView";
 import { SeasonsView } from "@/features/seasons/views/SeasonsView";
 import { SettingsModal } from "@/features/settings/components/SettingsModal";
 import { TeamGeneratorView } from "@/features/team-generator/views/TeamGeneratorView";
 import { useDatabase } from "@/hooks/useDatabase";
-import type { Player, Season } from "@/types";
+import type { Match, Player, Season } from "@/types";
 import { loadScoreFactors } from "@/utils/playerStats";
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
 	} = useDatabase();
 	const [activeTab, setActiveTab] = useState<TabValue>("seasons");
 	const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+	const [isComparerModalOpen, setIsComparerModalOpen] = useState(false);
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
 	const defaultSeasonId = useMemo(() => {
@@ -61,6 +63,9 @@ function App() {
 
 	const openPlayerModal = () => setIsPlayerModalOpen(true);
 	const closePlayerModal = () => setIsPlayerModalOpen(false);
+
+	const openComparerModal = () => setIsComparerModalOpen(true);
+	const closeComparerModal = () => setIsComparerModalOpen(false);
 
 	const openSettingsModal = () => setIsSettingsModalOpen(true);
 	const closeSettingsModal = () => setIsSettingsModalOpen(false);
@@ -134,6 +139,7 @@ function App() {
 										onEditPlayer={editPlayer}
 										onDeletePlayer={deletePlayer}
 										onOpenSummary={openPlayerModal}
+										onOpenComparer={openComparerModal}
 									/>
 								)}
 
@@ -160,6 +166,20 @@ function App() {
 												!selectedSeasonId || p.seasonId === selectedSeasonId,
 										)}
 										onClose={closePlayerModal}
+									/>
+								)}
+
+								{isComparerModalOpen && (
+									<PlayerComparerModal
+										players={players.filter(
+											(p: Player) =>
+												!selectedSeasonId || p.seasonId === selectedSeasonId,
+										)}
+										matches={matches.filter(
+											(m: Match) =>
+												!selectedSeasonId || m.seasonId === selectedSeasonId,
+										)}
+										onClose={closeComparerModal}
 									/>
 								)}
 
