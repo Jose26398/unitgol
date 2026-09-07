@@ -127,6 +127,7 @@ function App() {
 								{activeTab === "players" && (
 									<PlayersView
 										players={players}
+										matches={matches}
 										seasons={seasons}
 										selectedSeasonId={selectedSeasonId}
 										isAdmin={teamAuth?.isAdmin || false}
@@ -149,6 +150,7 @@ function App() {
 								{activeTab === "generator" && (
 									<TeamGeneratorView
 										players={players}
+										matches={matches}
 										selectedSeasonId={selectedSeasonId}
 									/>
 								)}
@@ -159,6 +161,8 @@ function App() {
 											(p: Player) =>
 												!selectedSeasonId || p.seasonId === selectedSeasonId,
 										)}
+										matches={matches}
+										seasonId={selectedSeasonId}
 										onClose={closePlayerModal}
 									/>
 								)}

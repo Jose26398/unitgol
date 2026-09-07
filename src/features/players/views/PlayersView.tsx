@@ -1,9 +1,10 @@
 import { NewPlayerForm } from "@/features/players/components/NewPlayerForm";
 import { PlayerCard } from "@/features/players/components/PlayerCard";
-import type { Player, Season } from "@/types";
+import type { Match, Player, Season } from "@/types";
 
 interface PlayersViewProps {
 	players: Player[];
+	matches: Match[];
 	seasons: Season[];
 	selectedSeasonId: string | null;
 	isAdmin: boolean;
@@ -20,6 +21,7 @@ interface PlayersViewProps {
 
 export function PlayersView({
 	players,
+	matches,
 	seasons,
 	selectedSeasonId,
 	isAdmin,
@@ -55,6 +57,8 @@ export function PlayersView({
 						<PlayerCard
 							key={player.id}
 							player={player}
+							matches={matches}
+							seasonId={selectedSeasonId}
 							onEdit={onEditPlayer}
 							onDelete={onDeletePlayer}
 							seasons={seasons}

@@ -1,12 +1,15 @@
 import { Edit, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
-import type { Player, Season } from "@/types";
+import type { Match, Player, Season } from "@/types";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
+import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 import { PlayerEditModal } from "./PlayerEditModal";
 
 interface PlayerCardProps {
 	player: Player;
+	matches: Match[];
+	seasonId: string | null;
 	onDelete?: (id: string) => void;
 	onEdit?: (id: string, updatedData: Partial<Omit<Player, "id">>) => void;
 	seasons?: Season[];
@@ -15,6 +18,8 @@ interface PlayerCardProps {
 
 export function PlayerCard({
 	player,
+	matches,
+	seasonId,
 	onDelete,
 	onEdit,
 	seasons,
@@ -25,6 +30,7 @@ export function PlayerCard({
 
 	const winRate = calculateWinRate(player);
 	const score = calculateScore(player);
+	const recentForm = calculateRecentForm(player, matches, seasonId);
 
 	const handleSave = (updatedData: Partial<Omit<Player, "id">>) => {
 		if (onEdit) {
@@ -93,11 +99,23 @@ export function PlayerCard({
 			</div>
 
 			{/* Player Score */}
-			<div className="mt-5 pt-4 border-t border-gray-200">
-				<p className="text-gray-500 text-sm">Puntuación del jugador</p>
-				<p className="text-2xl font-bold text-emerald-600">
-					{score.toFixed(1)}
-				</p>
+			<div className="flex justify-between mt-6">
+				<div className="mt-5 pt-4 border-t border-gray-200">
+					<p className="text-gray-500 text-sm">Puntuación del jugador</p>
+					<p className="text-2xl font-bold text-emerald-600">
+						{score.toFixed(1)}
+					</p>
+				</div>
+				<div className="mt-5 pt-4 text-sm">
+					<p className="text-gray-500">Forma reciente</p>
+					<p className="mt-1 text-lg">
+						{recentForm.results.length > 0
+							? recentForm.results
+									.map((result) => recentFormSymbols[result])
+									.join(" ")
+							: "⚪"}
+					</p>
+				</div>
 			</div>
 
 			{/* Modal for editing */}

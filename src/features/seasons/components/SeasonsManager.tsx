@@ -120,11 +120,11 @@ export function SeasonsManager({
 				{seasons.map((season) => (
 					<li
 						key={season.id}
-						className={`flex justify-between items-center border p-3 rounded-sm bg-white transition-colors ${selectedSeasonId === season.id ? "bg-emerald-100 border-emerald-400" : "hover:bg-gray-50"}`}
+						className={`flex justify-between items-center border rounded-sm bg-white transition-colors ${selectedSeasonId === season.id ? "bg-emerald-100 border-emerald-400" : "hover:bg-gray-50"}`}
 					>
 						<button
 							type="button"
-							className="flex-1 text-left cursor-pointer"
+							className="flex-1 text-left cursor-pointer p-3"
 							onClick={() => onSelectSeason?.(season.id)}
 						>
 							<div className="font-semibold">{season.name}</div>

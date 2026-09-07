@@ -1,14 +1,21 @@
 import { useMemo } from "react";
 import { PlayerCard } from "@/features/players/components/PlayerCard";
-import type { Player } from "@/types";
+import type { Match, Player } from "@/types";
 import { calculateScore } from "@/utils/playerStats";
 
 interface TeamDisplayProps {
 	teamName: string;
 	players: Player[];
+	matches: Match[];
+	seasonId: string | null;
 }
 
-export function TeamDisplay({ teamName, players }: TeamDisplayProps) {
+export function TeamDisplay({
+	teamName,
+	players,
+	matches,
+	seasonId,
+}: TeamDisplayProps) {
 	const teamScore = useMemo(
 		() =>
 			players
@@ -24,7 +31,13 @@ export function TeamDisplay({ teamName, players }: TeamDisplayProps) {
 			</h3>
 			<div className="space-y-4">
 				{players.map((player) => (
-					<PlayerCard key={player.id} player={player} />
+					<PlayerCard
+						key={player.id}
+						player={player}
+						matches={matches}
+						seasonId={seasonId}
+						isAdmin={false}
+					/>
 				))}
 			</div>
 		</div>

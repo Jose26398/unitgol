@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
-import type { Player } from "@/types";
+import type { Match, Player } from "@/types";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
+import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 
 type SortKey = "name" | "matches" | "goals" | "assists" | "score";
 type SortOrder = "asc" | "desc";
 
 export function PlayerSummaryModal({
 	players,
+	matches,
+	seasonId,
 	onClose,
 }: {
 	players: Player[];
+	matches: Match[];
+	seasonId: string | null;
 	onClose: () => void;
 }) {
 	const modalRef = useRef<HTMLDivElement>(null);
@@ -183,12 +188,17 @@ export function PlayerSummaryModal({
 								filteredAndSortedPlayers.map((player) => {
 									const draws = player.matches - player.wins - player.losses;
 									const winRate = calculateWinRate(player).toFixed(2);
-									const goalsPerMatch = (player.goals / player.matches).toFixed(
-										2,
+									const recentForm = calculateRecentForm(
+										player,
+										matches,
+										seasonId,
 									);
-									const assistsPerMatch = (
-										player.assists / player.matches
-									).toFixed(2);
+									const goalsPerMatch = player.matches
+										? (player.goals / player.matches).toFixed(2)
+										: "-";
+									const assistsPerMatch = player.matches
+										? (player.assists / player.matches).toFixed(2)
+										: "-";
 									const score = calculateScore(player).toFixed(2);
 
 									return (
@@ -201,7 +211,13 @@ export function PlayerSummaryModal({
 												title={player.name}
 											>
 												<div className="font-medium">{player.name}</div>
-												<div className="text-xs text-gray-500">★{score}</div>
+												<div className="text-xs text-gray-500">
+													{recentForm.results.length > 0
+														? recentForm.results
+																.map((result) => recentFormSymbols[result])
+																.join(" ")
+														: "⚪"}
+												</div>
 											</td>
 											<td className="py-3 px-2">
 												<div>

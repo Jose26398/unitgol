@@ -1,16 +1,22 @@
 import { Shuffle, Users } from "lucide-react";
 import { useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
-import type { Player } from "@/types";
+import type { Match, Player } from "@/types";
 import { generateBalancedTeams } from "@/utils/playerStats";
 import { PlayerSelector } from "./PlayerSelector";
 import { TeamDisplay } from "./TeamDisplay";
 
 interface TeamGeneratorProps {
 	players: Player[];
+	matches: Match[];
+	seasonId: string | null;
 }
 
-export function TeamGenerator({ players }: TeamGeneratorProps) {
+export function TeamGenerator({
+	players,
+	matches,
+	seasonId,
+}: TeamGeneratorProps) {
 	const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
 	const [teams, setTeams] = useState<{
 		teamA: Player[];
@@ -69,8 +75,18 @@ export function TeamGenerator({ players }: TeamGeneratorProps) {
 
 			{teams && (
 				<div className="grid md:grid-cols-2 gap-6">
-					<TeamDisplay teamName="Equipo A" players={teams.teamA} />
-					<TeamDisplay teamName="Equipo B" players={teams.teamB} />
+					<TeamDisplay
+						teamName="Equipo A"
+						players={teams.teamA}
+						matches={matches}
+						seasonId={seasonId}
+					/>
+					<TeamDisplay
+						teamName="Equipo B"
+						players={teams.teamB}
+						matches={matches}
+						seasonId={seasonId}
+					/>
 				</div>
 			)}
 		</div>
