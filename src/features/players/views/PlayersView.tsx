@@ -17,6 +17,7 @@ interface PlayersViewProps {
 	onEditPlayer: (id: string, updatedData: Partial<Omit<Player, "id">>) => void;
 	onDeletePlayer: (id: string) => void;
 	onOpenSummary: () => void;
+	onOpenComparer: () => void;
 }
 
 export function PlayersView({
@@ -29,6 +30,7 @@ export function PlayersView({
 	onEditPlayer,
 	onDeletePlayer,
 	onOpenSummary,
+	onOpenComparer,
 }: PlayersViewProps) {
 	const visiblePlayers = players.filter(
 		(p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId,
@@ -43,6 +45,13 @@ export function PlayersView({
 					className="bg-emerald-600 text-white mb-6 p-6 rounded-lg shadow-md hover:bg-emerald-700"
 				>
 					Tabla Resumen
+				</button>
+				<button
+					type="button"
+					onClick={onOpenComparer}
+					className="bg-emerald-600 text-white mb-6 p-6 rounded-lg shadow-md hover:bg-emerald-700"
+				>
+					Cara a Cara
 				</button>
 				{isAdmin && (
 					<NewPlayerForm
