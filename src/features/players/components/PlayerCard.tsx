@@ -4,10 +4,12 @@ import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import type { Match, Player, Season } from "@/types";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
 import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
+import { AchievementsSection } from "./AchievementsSection";
 import { PlayerEditModal } from "./PlayerEditModal";
 
 interface PlayerCardProps {
 	player: Player;
+	players: Player[];
 	matches: Match[];
 	seasonId: string | null;
 	onDelete?: (id: string) => void;
@@ -18,6 +20,7 @@ interface PlayerCardProps {
 
 export function PlayerCard({
 	player,
+	players,
 	matches,
 	seasonId,
 	onDelete,
@@ -31,6 +34,9 @@ export function PlayerCard({
 	const winRate = calculateWinRate(player);
 	const score = calculateScore(player);
 	const recentForm = calculateRecentForm(player, matches, seasonId);
+	const achievementMatches = matches.filter(
+		(match) => !seasonId || match.seasonId === seasonId,
+	);
 
 	const handleSave = (updatedData: Partial<Omit<Player, "id">>) => {
 		if (onEdit) {
@@ -117,6 +123,12 @@ export function PlayerCard({
 					</p>
 				</div>
 			</div>
+
+			<AchievementsSection
+				player={player}
+				players={players}
+				matches={achievementMatches}
+			/>
 
 			{/* Modal for editing */}
 			{isEditing && (

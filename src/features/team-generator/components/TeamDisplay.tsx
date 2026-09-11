@@ -34,6 +34,7 @@ export function TeamDisplay({
 					<PlayerCard
 						key={player.id}
 						player={player}
+						players={players}
 						matches={matches}
 						seasonId={seasonId}
 						isAdmin={false}
