@@ -2,6 +2,7 @@ import { Edit, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import type { Match, Player, Season } from "@/types";
+import { calculateEloRatings, getEloRating, type RatingMode } from "@/utils/elo";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
 import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 import { AchievementsSection } from "./AchievementsSection";
@@ -16,6 +17,7 @@ interface PlayerCardProps {
 	onEdit?: (id: string, updatedData: Partial<Omit<Player, "id">>) => void;
 	seasons?: Season[];
 	isAdmin: boolean;
+	ratingMode: RatingMode;
 }
 
 export function PlayerCard({
@@ -27,12 +29,17 @@ export function PlayerCard({
 	onEdit,
 	seasons,
 	isAdmin,
+	ratingMode,
 }: PlayerCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
 
 	const winRate = calculateWinRate(player);
-	const score = calculateScore(player);
+	const calculatePoints = (player: Player) =>
+		ratingMode === "elo"
+			? getEloRating(calculateEloRatings(matches, seasonId), player.id)
+			: calculateScore(player);
+
 	const recentForm = calculateRecentForm(player, matches, seasonId);
 	const achievementMatches = matches.filter(
 		(match) => !seasonId || match.seasonId === seasonId,
@@ -107,9 +114,11 @@ export function PlayerCard({
 			{/* Player Score */}
 			<div className="flex justify-between mt-6">
 				<div className="mt-5 pt-4 border-t border-gray-200">
-					<p className="text-gray-500 text-sm">Puntuación del jugador</p>
+					<p className="text-gray-500 text-sm">
+						{ratingMode === "elo" ? "Rating ELO" : "Puntuación del jugador"}
+					</p>
 					<p className="text-2xl font-bold text-emerald-600">
-						{score.toFixed(1)}
+						{calculatePoints(player).toFixed(1)}
 					</p>
 				</div>
 				<div className="mt-5 pt-4 text-sm">

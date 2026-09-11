@@ -81,13 +81,14 @@ export const totalScore = (players: Player[]): number =>
  */
 export const generateBalancedTeams = (
 	players: Player[],
+	getPlayerValue: (player: Player) => number = calculateScore,
 ): { teamA: Player[]; teamB: Player[] } => {
 	const sortedPlayers = [...players].sort(
-		(a, b) => calculateScore(b) - calculateScore(a),
+		(a, b) => getPlayerValue(b) - getPlayerValue(a),
 	);
 	const totalPlayers = sortedPlayers.length;
 	const totalScore = sortedPlayers.reduce(
-		(sum, player) => sum + calculateScore(player),
+		(sum, player) => sum + getPlayerValue(player),
 		0,
 	);
 
@@ -107,7 +108,7 @@ export const generateBalancedTeams = (
 		for (let i = 0; i < totalPlayers; i++) {
 			if (mask & (1 << i)) {
 				subset.push(sortedPlayers[i]);
-				subsetScore += calculateScore(sortedPlayers[i]);
+				subsetScore += getPlayerValue(sortedPlayers[i]);
 			}
 		}
 

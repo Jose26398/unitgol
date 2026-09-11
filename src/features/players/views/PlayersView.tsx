@@ -3,12 +3,14 @@ import { AchievementsInfoModal } from "@/features/players/components/Achievement
 import { NewPlayerForm } from "@/features/players/components/NewPlayerForm";
 import { PlayerCard } from "@/features/players/components/PlayerCard";
 import type { Match, Player, Season } from "@/types";
+import type { RatingMode } from "@/utils/elo";
 
 interface PlayersViewProps {
 	players: Player[];
 	matches: Match[];
 	seasons: Season[];
 	selectedSeasonId: string | null;
+	ratingMode: RatingMode;
 	isAdmin: boolean;
 	onAddPlayer: (
 		player: Omit<
@@ -27,6 +29,7 @@ export function PlayersView({
 	matches,
 	seasons,
 	selectedSeasonId,
+	ratingMode,
 	isAdmin,
 	onAddPlayer,
 	onEditPlayer,
@@ -38,7 +41,6 @@ export function PlayersView({
 	const visiblePlayers = players.filter(
 		(p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId,
 	);
-
 	return (
 		<>
 			<div className="flex gap-4 md:flex-row flex-col w-full justify-between">
@@ -88,6 +90,7 @@ export function PlayersView({
 							onDelete={onDeletePlayer}
 							seasons={seasons}
 							isAdmin={isAdmin}
+							ratingMode={ratingMode}
 						/>
 					))}
 				</div>

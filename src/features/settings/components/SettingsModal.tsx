@@ -4,6 +4,7 @@ import { supabaseService as db } from "@/db/supabase-service";
 import { useAuth } from "@/features/auth/useAuth";
 import { SeasonSelector } from "@/features/seasons/components/SeasonSelector";
 import type { Season } from "@/types";
+import type { RatingMode } from "@/utils/elo";
 import { setScoreFactors } from "@/utils/playerStats";
 import { exportDatabase } from "../utils/exportData";
 
@@ -13,6 +14,8 @@ interface SettingsModalProps {
 	seasons: Season[];
 	selectedSeasonId: string | null;
 	onSelectSeason: (seasonId: string | null) => void;
+	ratingMode: RatingMode;
+	onRatingModeChange: (mode: RatingMode) => void;
 }
 
 export function SettingsModal({
@@ -21,11 +24,19 @@ export function SettingsModal({
 	seasons,
 	selectedSeasonId,
 	onSelectSeason,
+	ratingMode,
+	onRatingModeChange,
 }: SettingsModalProps) {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const [goalScoreFactor, setGoalScoreFactor] = useState(10);
 	const [assistScoreFactor, setAssistScoreFactor] = useState(5);
+	const [selectedRatingMode, setSelectedRatingMode] =
+		useState<RatingMode>(ratingMode);
 	const { teamAuth } = useAuth();
+
+	useEffect(() => {
+		setSelectedRatingMode(ratingMode);
+	}, [ratingMode]);
 
 	useEffect(() => {
 		if (teamAuth) {
@@ -60,8 +71,10 @@ export function SettingsModal({
 	const applySettings = async () => {
 		await db.setSetting("goalScoreFactor", goalScoreFactor);
 		await db.setSetting("assistScoreFactor", assistScoreFactor);
+		await db.setSetting("ratingMode", selectedRatingMode === "elo" ? 1 : 0);
 
 		setScoreFactors(goalScoreFactor, assistScoreFactor);
+		onRatingModeChange(selectedRatingMode);
 		onClose();
 	};
 
@@ -91,9 +104,27 @@ export function SettingsModal({
 				{/* Factor de puntos por gol */}
 				<div className="mb-6">
 					<label
-						htmlFor="goalScoreFactor"
+						htmlFor="ratingMode"
 						className="block text-sm font-medium text-gray-700"
 					>
+						Métrica para valorar jugadores
+					</label>
+					<select
+						id="ratingMode"
+						value={selectedRatingMode}
+						onChange={(event) =>
+							setSelectedRatingMode(event.target.value as RatingMode)
+						}
+						className="block w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-base"
+					>
+						<option value="score">Score</option>
+						<option value="elo">ELO</option>
+					</select>
+				</div>
+
+				{/* Factor de puntos por gol */}
+				<div className="mb-6">
+					<label htmlFor="goalScoreFactor" className="block text-sm font-medium text-gray-700">
 						Factor de puntos por gol
 					</label>
 					<input

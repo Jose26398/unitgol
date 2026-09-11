@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { Match, Player } from "@/types";
+import { calculateEloRatings, getEloRating, type RatingMode } from "@/utils/elo";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
 import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 
@@ -11,17 +12,23 @@ export function PlayerSummaryModal({
 	players,
 	matches,
 	seasonId,
+	ratingMode,
 	onClose,
 }: {
 	players: Player[];
 	matches: Match[];
 	seasonId: string | null;
+	ratingMode: RatingMode;
 	onClose: () => void;
 }) {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [sortKey, setSortKey] = useState<SortKey>("score");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+	const getPlayerRating = (player: Player) =>
+		ratingMode === "elo"
+			? getEloRating(calculateEloRatings(matches, seasonId), player.id)
+			: calculateScore(player);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -46,41 +53,19 @@ export function PlayerSummaryModal({
 			player.name.toLowerCase().includes(searchTerm.toLowerCase()),
 		)
 		.sort((a, b) => {
-			let aValue: number | string = 0;
-			let bValue: number | string = 0;
-
-			switch (sortKey) {
-				case "name":
-					aValue = a.name;
-					bValue = b.name;
-					break;
-				case "matches":
-					aValue = a.matches;
-					bValue = b.matches;
-					break;
-				case "goals":
-					aValue = a.goals;
-					bValue = b.goals;
-					break;
-				case "assists":
-					aValue = a.assists;
-					bValue = b.assists;
-					break;
-				case "score":
-					aValue = calculateScore(a);
-					bValue = calculateScore(b);
-					break;
+			if (sortKey === "name") {
+				const comparison = a.name.localeCompare(b.name);
+				return sortOrder === "asc" ? comparison : -comparison;
 			}
 
-			if (typeof aValue === "string" && typeof bValue === "string") {
-				return sortOrder === "asc"
-					? aValue.localeCompare(bValue)
-					: bValue.localeCompare(aValue);
-			}
-
-			const numA = typeof aValue === "number" ? aValue : 0;
-			const numB = typeof bValue === "number" ? bValue : 0;
-			return sortOrder === "asc" ? numA - numB : numB - numA;
+			const values = {
+				matches: [a.matches, b.matches],
+				goals: [a.goals, b.goals],
+				assists: [a.assists, b.assists],
+				score: [getPlayerRating(a), getPlayerRating(b)],
+			};
+			const [aValue, bValue] = values[sortKey];
+			return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
 		});
 
 	const getSortIndicator = (column: SortKey) => {
@@ -172,7 +157,7 @@ export function PlayerSummaryModal({
 									className="text-left py-3 px-2 cursor-pointer hover:bg-gray-100 font-semibold"
 									onClick={() => handleSort("score")}
 								>
-									Rating{" "}
+									{ratingMode === "elo" ? "ELO" : "Score"}{" "}
 									<span
 										className={
 											sortKey === "score" ? "ml-1" : "text-gray-300 ml-1"
@@ -199,7 +184,7 @@ export function PlayerSummaryModal({
 									const assistsPerMatch = player.matches
 										? (player.assists / player.matches).toFixed(2)
 										: "-";
-									const score = calculateScore(player).toFixed(2);
+									const rating = getPlayerRating(player).toFixed(2);
 
 									return (
 										<tr
@@ -240,7 +225,7 @@ export function PlayerSummaryModal({
 												</div>
 											</td>
 											<td className="py-3 px-2 font-semibold text-emerald-600">
-												{score}
+													{rating}
 											</td>
 										</tr>
 									);
@@ -262,7 +247,12 @@ export function PlayerSummaryModal({
 						jugadores
 					</div>
 					<div className="flex gap-2">
-						<ShareButton players={filteredAndSortedPlayers} />
+						<ShareButton
+							players={filteredAndSortedPlayers}
+							matches={matches}
+							seasonId={seasonId}
+							ratingMode={ratingMode}
+						/>
 						<button
 							type="button"
 							onClick={onClose}

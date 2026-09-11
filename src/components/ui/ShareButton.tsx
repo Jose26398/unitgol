@@ -1,9 +1,9 @@
 import { Share } from "lucide-react";
-import type { Player } from "@/types";
+import type { Match, Player } from "@/types";
+import { calculateEloRatings, getEloRating, type RatingMode } from "@/utils/elo";
 import {
 	calculateScore,
 	calculateWinRate,
-	totalScore,
 } from "@/utils/playerStats";
 
 interface Props {
@@ -12,9 +12,26 @@ interface Props {
 		teamA: Player[];
 		teamB: Player[];
 	};
+	matches?: Match[];
+	seasonId?: string | null;
+	ratingMode?: RatingMode;
 }
 
-export function ShareButton({ players, teams }: Props) {
+export function ShareButton({
+	players,
+	teams,
+	matches = [],
+	seasonId = null,
+	ratingMode = "score",
+}: Props) {
+	const eloRatings =
+		ratingMode === "elo" ? calculateEloRatings(matches, seasonId) : null;
+	const getPlayerRating = (player: Player) =>
+		ratingMode === "elo"
+			? getEloRating(eloRatings, player.id)
+			: calculateScore(player);
+	const ratingLabel = ratingMode === "elo" ? "ELO" : "Score";
+
 	const generatePlayerSummary = (player: Player, compact = false): string => {
 		const { name, matches, wins, losses, goals, assists } = player;
 		const draws = matches - wins - losses;
@@ -23,9 +40,9 @@ export function ShareButton({ players, teams }: Props) {
 		const assistsPerMatch = (assists / matches).toFixed(2);
 
 		if (compact) {
-			return `- ${name} (🌟${calculateScore(player).toFixed(2)})\n`;
+			return `- ${name} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)})\n`;
 		}
-		return `- ${name} (🌟${calculateScore(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate.toFixed(2)}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
+		return `- ${name} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate.toFixed(2)}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
 	};
 
 	const generateShareableContent = (): string => {
@@ -37,11 +54,19 @@ export function ShareButton({ players, teams }: Props) {
 				content += generatePlayerSummary(player);
 			});
 		} else if (teams) {
-			content += `Equipo A (Total: ${totalScore(teams.teamA).toFixed(2)}):\n`;
+			const teamAValue = teams.teamA.reduce(
+				(total, player) => total + getPlayerRating(player),
+				0,
+			);
+			const teamBValue = teams.teamB.reduce(
+				(total, player) => total + getPlayerRating(player),
+				0,
+			);
+			content += `Equipo A (Total ${ratingLabel}: ${teamAValue.toFixed(2)}):\n`;
 			teams.teamA.forEach((player) => {
 				content += generatePlayerSummary(player, true);
 			});
-			content += `\nEquipo B (Total: ${totalScore(teams.teamB).toFixed(2)}):\n`;
+			content += `\nEquipo B (Total ${ratingLabel}: ${teamBValue.toFixed(2)}):\n`;
 			teams.teamB.forEach((player) => {
 				content += generatePlayerSummary(player, true);
 			});

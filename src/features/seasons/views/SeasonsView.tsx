@@ -12,6 +12,7 @@ interface SeasonsViewProps {
 	onEditSeason: (season: Season) => void;
 	onDeleteSeason: (id: string) => void;
 	onSelectSeason: (seasonId: string | null) => void;
+	ratingMode: "elo" | "score";
 }
 
 export function SeasonsView({
@@ -24,6 +25,7 @@ export function SeasonsView({
 	onEditSeason,
 	onDeleteSeason,
 	onSelectSeason,
+	ratingMode,
 }: SeasonsViewProps) {
 	return (
 		<>
@@ -43,6 +45,7 @@ export function SeasonsView({
 					seasonId={selectedSeasonId}
 					players={players}
 					matches={matches}
+					ratingMode={ratingMode}
 				/>
 			)}
 		</>

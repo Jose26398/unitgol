@@ -17,6 +17,7 @@ import {
 	Users,
 	Volleyball,
 } from "lucide-react";
+import { calculateEloRatings, getEloRating } from "@/utils/elo";
 import {
 	buildChart,
 	type ChartBuildResult,
@@ -29,9 +30,10 @@ interface SeasonStatsProps {
 	seasonId: string;
 	players: Player[];
 	matches: Match[];
+	ratingMode: "elo" | "score";
 }
 
-export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
+export function SeasonStats({ seasonId, players, matches, ratingMode }: SeasonStatsProps) {
 	const filteredPlayers = useMemo(
 		() => players.filter((p) => p.seasonId === seasonId),
 		[players, seasonId],
@@ -54,6 +56,15 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 			),
 		[seasonMatches],
 	);
+
+	const calculatePoints = useCallback(
+		(player: Player) =>
+			ratingMode === "elo"
+				? getEloRating(calculateEloRatings(matches, seasonId), player.id)
+				: calculateScore(player),
+		[ratingMode, matches, seasonId],
+	);
+
 
 	const playerStats = useMemo(
 		() =>
@@ -90,7 +101,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 	);
 
 	const [chart, setChart] = useState<ChartBuildResult | null>(() =>
-		buildChart("score", false, {
+		buildChart("score", false, calculatePoints, {
 			players: filteredPlayers,
 			playerStats,
 			matchesChrono,
@@ -101,10 +112,12 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 	const bestPlayer = useMemo(
 		() =>
 			playerStats.reduce<Player | null>(
-				(b, p) => (!b || calculateScore(p) > calculateScore(b) ? p : b),
+				(b, p) => {
+					return !b || calculatePoints(p) > calculatePoints(b) ? p : b;
+				},
 				null,
 			),
-		[playerStats],
+		[playerStats, calculatePoints],
 	);
 	const topScorer = useMemo(
 		() =>
@@ -156,7 +169,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 	// Handler to change the dynamic chart
 	const onClickStat = useCallback(
 		(stat: string, useLine: boolean) => {
-			const result = buildChart(stat, useLine, {
+			const result = buildChart(stat, useLine, calculatePoints, {
 				players: filteredPlayers,
 				playerStats,
 				matchesChrono,
@@ -168,7 +181,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 				}
 			}
 		},
-		[filteredPlayers, playerStats, matchesChrono],
+		[filteredPlayers, playerStats, matchesChrono, calculatePoints],
 	);
 
 	return (
@@ -184,7 +197,7 @@ export function SeasonStats({ seasonId, players, matches }: SeasonStatsProps) {
 						icon: <Trophy className="text-yellow-500" />,
 						label: "Mejor jugador",
 						value: bestPlayer
-							? `${bestPlayer.name} (${calculateScore(bestPlayer).toFixed(1)})`
+							? `${bestPlayer.name} (${calculatePoints(bestPlayer).toFixed(1)})`
 							: "-",
 						onValueClick: () => onClickStat("score", false),
 						highlight: selectedStat.stat === "score" && !selectedStat.useLine,

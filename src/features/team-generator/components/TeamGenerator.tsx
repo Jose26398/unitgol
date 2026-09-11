@@ -2,6 +2,11 @@ import { Shuffle, Users } from "lucide-react";
 import { useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { Match, Player } from "@/types";
+import {
+	calculateEloRatings,
+	getEloRating,
+	type RatingMode,
+} from "@/utils/elo";
 import { generateBalancedTeams } from "@/utils/playerStats";
 import { PlayerSelector } from "./PlayerSelector";
 import { TeamDisplay } from "./TeamDisplay";
@@ -10,12 +15,14 @@ interface TeamGeneratorProps {
 	players: Player[];
 	matches: Match[];
 	seasonId: string | null;
+	ratingMode: RatingMode;
 }
 
 export function TeamGenerator({
 	players,
 	matches,
 	seasonId,
+	ratingMode,
 }: TeamGeneratorProps) {
 	const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
 	const [teams, setTeams] = useState<{
@@ -36,7 +43,18 @@ export function TeamGenerator({
 			alert("Selecciona al menos dos jugadores para generar equipos.");
 			return;
 		}
-		setTeams(generateBalancedTeams(selectedPlayers));
+		const eloRatings =
+			ratingMode === "elo"
+				? calculateEloRatings(matches, seasonId)
+				: null;
+		setTeams(
+			generateBalancedTeams(
+				selectedPlayers,
+				ratingMode === "elo"
+					? (player) => getEloRating(eloRatings, player.id)
+					: undefined,
+			),
+		);
 	};
 
 	return (
@@ -80,12 +98,14 @@ export function TeamGenerator({
 						players={teams.teamA}
 						matches={matches}
 						seasonId={seasonId}
+						ratingMode={ratingMode}
 					/>
 					<TeamDisplay
 						teamName="Equipo B"
 						players={teams.teamB}
 						matches={matches}
 						seasonId={seasonId}
+						ratingMode={ratingMode}
 					/>
 				</div>
 			)}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Footer } from "@/app/layout/Footer";
 import { Header } from "@/app/layout/Header";
 import { TabNav, type TabValue } from "@/app/layout/TabNav";
+import { supabaseService as db } from "@/db/supabase-service";
 import { AuthForm } from "@/features/auth/AuthForm";
 import { useAuth } from "@/features/auth/useAuth";
 import { MatchesView } from "@/features/matches/views/MatchesView";
@@ -14,6 +15,7 @@ import { SettingsModal } from "@/features/settings/components/SettingsModal";
 import { TeamGeneratorView } from "@/features/team-generator/views/TeamGeneratorView";
 import { useDatabase } from "@/hooks/useDatabase";
 import type { Match, Player, Season } from "@/types";
+import type { RatingMode } from "@/utils/elo";
 import { loadScoreFactors } from "@/utils/playerStats";
 
 function App() {
@@ -21,7 +23,14 @@ function App() {
 
 	useEffect(() => {
 		if (teamAuth) {
-			loadScoreFactors(teamAuth.id);
+			const loadRatingSettings = async () => {
+				await loadScoreFactors(teamAuth.id);
+				db.setTeamId(teamAuth.id);
+				const ratingMode = await db.getSetting("ratingMode");
+				setRatingMode(ratingMode === 1 ? "elo" : "score");
+			};
+
+			loadRatingSettings();
 		}
 	}, [teamAuth]);
 
@@ -45,6 +54,7 @@ function App() {
 	const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
 	const [isComparerModalOpen, setIsComparerModalOpen] = useState(false);
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [ratingMode, setRatingMode] = useState<RatingMode>("score");
 
 	const defaultSeasonId = useMemo(() => {
 		if (!seasons?.length) return null;
@@ -116,6 +126,7 @@ function App() {
 										onEditSeason={editSeason}
 										onDeleteSeason={deleteSeason}
 										onSelectSeason={setSelectedSeasonId}
+										ratingMode={ratingMode}
 									/>
 								)}
 
@@ -141,6 +152,7 @@ function App() {
 										onDeletePlayer={deletePlayer}
 										onOpenSummary={openPlayerModal}
 										onOpenComparer={openComparerModal}
+										ratingMode={ratingMode}
 									/>
 								)}
 
@@ -158,6 +170,7 @@ function App() {
 										players={players}
 										matches={matches}
 										selectedSeasonId={selectedSeasonId}
+										ratingMode={ratingMode}
 									/>
 								)}
 
@@ -169,6 +182,7 @@ function App() {
 										)}
 										matches={matches}
 										seasonId={selectedSeasonId}
+										ratingMode={ratingMode}
 										onClose={closePlayerModal}
 									/>
 								)}
@@ -193,6 +207,8 @@ function App() {
 									seasons={seasons}
 									selectedSeasonId={selectedSeasonId}
 									onSelectSeason={setSelectedSeasonId}
+									ratingMode={ratingMode}
+									onRatingModeChange={setRatingMode}
 								/>
 							</>
 						)}

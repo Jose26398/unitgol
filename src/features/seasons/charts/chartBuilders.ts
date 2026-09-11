@@ -1,6 +1,5 @@
 import type { ChartData } from "chart.js";
 import type { Match, Player } from "@/types";
-import { calculateScore } from "@/utils/playerStats";
 
 export type ChartMode = "bar" | "line";
 export type ChartStat = "matches" | "goals" | "assists";
@@ -27,6 +26,7 @@ const backgroundColor = (i: number, total: number) =>
 export function buildChart(
 	stat: string,
 	useLine: boolean,
+	calculatePoints: (player: Player) => number,
 	ctx: ChartContext,
 ): ChartBuildResult | null {
 	const { players, playerStats, matchesChrono } = ctx;
@@ -86,7 +86,7 @@ export function buildChart(
 			.sort((a, b) => {
 				const sa = findStats(a);
 				const sb = findStats(b);
-				return (sb ? calculateScore(sb) : 0) - (sa ? calculateScore(sa) : 0);
+				return (sb ? calculatePoints(sb) : 0) - (sa ? calculatePoints(sa) : 0);
 			})
 			.slice(0, 10);
 		return {
@@ -122,7 +122,7 @@ export function buildChart(
 							}
 							const score =
 								cumMatches > 0
-									? calculateScore({
+									? calculatePoints({
 											...p,
 											goals: cumGoals,
 											assists: cumAssists,
@@ -351,7 +351,7 @@ export function buildChart(
 			.sort((a, b) => {
 				const sa = findStats(a);
 				const sb = findStats(b);
-				return (sb ? calculateScore(sb) : 0) - (sa ? calculateScore(sa) : 0);
+				return (sb ? calculatePoints(sb) : 0) - (sa ? calculatePoints(sa) : 0);
 			})
 			.slice(0, 10);
 		return {
@@ -364,7 +364,7 @@ export function buildChart(
 					data: matchesChrono.map((m) => {
 						const goals = m.goals.filter((g) => g.playerId === p.id).length;
 						const assists = m.goals.filter((g) => g.assistById === p.id).length;
-						return calculateScore({
+						return calculatePoints({
 							...p,
 							goals,
 							assists,
@@ -393,7 +393,7 @@ export function buildChart(
 						label: "Score",
 						data: players.map((p) => {
 							const ps = findStats(p);
-							return ps ? calculateScore(ps) : 0;
+							return ps ? calculatePoints(ps) : 0;
 						}),
 						backgroundColor: "rgba(251,191,36,0.7)",
 					},
