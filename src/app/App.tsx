@@ -71,6 +71,14 @@ function App() {
 		defaultSeasonId,
 	);
 
+	useEffect(() => {
+		setSelectedSeasonId((currentSeasonId) =>
+			currentSeasonId && seasons.some((season) => season.id === currentSeasonId)
+				? currentSeasonId
+				: defaultSeasonId,
+		);
+	}, [defaultSeasonId, seasons]);
+
 	const openPlayerModal = () => setIsPlayerModalOpen(true);
 	const closePlayerModal = () => setIsPlayerModalOpen(false);
 
@@ -133,6 +141,7 @@ function App() {
 								{activeTab === "matches" && (
 									<MatchesView
 										matches={matches}
+										seasons={seasons}
 										selectedSeasonId={selectedSeasonId}
 										isAdmin={teamAuth?.isAdmin || false}
 										onEditMatch={editMatch}

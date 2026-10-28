@@ -8,7 +8,6 @@ export function useDatabase() {
 	const [players, setPlayers] = useState<Player[]>([]);
 	const [matches, setMatches] = useState<Match[]>([]);
 	const [seasons, setSeasons] = useState<Season[]>([]);
-	const [selectedSeason, setSelectedSeason] = useState<Season | null>(null);
 	const [loading, setLoading] = useState({
 		players: true,
 		matches: true,
@@ -142,20 +141,10 @@ export function useDatabase() {
 		}
 	};
 
-	const selectSeason = (seasonId: string | null) => {
-		if (!seasonId) {
-			setSelectedSeason(null);
-			return;
-		}
-		const season = seasons.find((s) => s.id === seasonId);
-		setSelectedSeason(season || null);
-	};
-
 	return {
 		players,
 		matches,
 		seasons,
-		selectedSeason,
 		loading,
 		error,
 		addPlayer,
@@ -167,6 +156,5 @@ export function useDatabase() {
 		addSeason,
 		editSeason,
 		deleteSeason,
-		selectSeason,
 	};
 }

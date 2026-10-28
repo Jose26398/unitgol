@@ -1,8 +1,9 @@
 import { MatchCard } from "@/features/matches/components/MatchCard";
-import type { Match } from "@/types";
+import type { Match, Season } from "@/types";
 
 interface MatchesViewProps {
 	matches: Match[];
+	seasons: Season[];
 	selectedSeasonId: string | null;
 	isAdmin: boolean;
 	onEditMatch: (match: Match) => void;
@@ -11,6 +12,7 @@ interface MatchesViewProps {
 
 export function MatchesView({
 	matches,
+	seasons,
 	selectedSeasonId,
 	isAdmin,
 	onEditMatch,
@@ -28,6 +30,7 @@ export function MatchesView({
 						<MatchCard
 							key={match.id}
 							match={match}
+							seasons={seasons}
 							onEdit={onEditMatch}
 							onDelete={onDeleteMatch}
 							isAdmin={isAdmin}

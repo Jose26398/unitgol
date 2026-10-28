@@ -33,7 +33,12 @@ interface SeasonStatsProps {
 	ratingMode: "elo" | "score";
 }
 
-export function SeasonStats({ seasonId, players, matches, ratingMode }: SeasonStatsProps) {
+export function SeasonStats({
+	seasonId,
+	players,
+	matches,
+	ratingMode,
+}: SeasonStatsProps) {
 	const filteredPlayers = useMemo(
 		() => players.filter((p) => p.seasonId === seasonId),
 		[players, seasonId],
@@ -56,15 +61,18 @@ export function SeasonStats({ seasonId, players, matches, ratingMode }: SeasonSt
 			),
 		[seasonMatches],
 	);
+	const eloRatings = useMemo(
+		() => calculateEloRatings(matches, seasonId),
+		[matches, seasonId],
+	);
 
 	const calculatePoints = useCallback(
 		(player: Player) =>
 			ratingMode === "elo"
-				? getEloRating(calculateEloRatings(matches, seasonId), player.id)
+				? getEloRating(eloRatings, player.id)
 				: calculateScore(player),
-		[ratingMode, matches, seasonId],
+		[ratingMode, eloRatings],
 	);
-
 
 	const playerStats = useMemo(
 		() =>
@@ -111,12 +119,9 @@ export function SeasonStats({ seasonId, players, matches, ratingMode }: SeasonSt
 	// Awards and general stats
 	const bestPlayer = useMemo(
 		() =>
-			playerStats.reduce<Player | null>(
-				(b, p) => {
-					return !b || calculatePoints(p) > calculatePoints(b) ? p : b;
-				},
-				null,
-			),
+			playerStats.reduce<Player | null>((b, p) => {
+				return !b || calculatePoints(p) > calculatePoints(b) ? p : b;
+			}, null),
 		[playerStats, calculatePoints],
 	);
 	const topScorer = useMemo(

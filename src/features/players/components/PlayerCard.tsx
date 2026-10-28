@@ -2,7 +2,7 @@ import { Edit, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import type { Match, Player, Season } from "@/types";
-import { calculateEloRatings, getEloRating, type RatingMode } from "@/utils/elo";
+import { type EloRatings, getEloRating, type RatingMode } from "@/utils/elo";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
 import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 import { AchievementsSection } from "./AchievementsSection";
@@ -18,6 +18,7 @@ interface PlayerCardProps {
 	seasons?: Season[];
 	isAdmin: boolean;
 	ratingMode: RatingMode;
+	eloRatings?: EloRatings;
 }
 
 export function PlayerCard({
@@ -30,6 +31,7 @@ export function PlayerCard({
 	seasons,
 	isAdmin,
 	ratingMode,
+	eloRatings,
 }: PlayerCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -37,7 +39,7 @@ export function PlayerCard({
 	const winRate = calculateWinRate(player);
 	const calculatePoints = (player: Player) =>
 		ratingMode === "elo"
-			? getEloRating(calculateEloRatings(matches, seasonId), player.id)
+			? getEloRating(eloRatings, player.id)
 			: calculateScore(player);
 
 	const recentForm = calculateRecentForm(player, matches, seasonId);

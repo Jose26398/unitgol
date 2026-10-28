@@ -2,8 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar, Edit, Trash2, Trophy } from "lucide-react";
 import { useState } from "react";
-import { useDatabase } from "@/hooks/useDatabase";
-import type { Match } from "@/types";
+import type { Match, Season } from "@/types";
 import { EditMatchDialog } from "./EditMatchDialog";
 
 interface MatchCardProps {
@@ -11,6 +10,7 @@ interface MatchCardProps {
 	onEdit: (match: Match) => void;
 	onDelete: (match: Match) => void;
 	isAdmin: boolean;
+	seasons: Season[];
 }
 
 const GOALS_LIMIT = 5;
@@ -20,12 +20,11 @@ export function MatchCard({
 	onEdit,
 	onDelete,
 	isAdmin,
+	seasons,
 }: MatchCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [showAllGoals, setShowAllGoals] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-	const { seasons } = useDatabase();
-
 	const handleEdit = (updatedMatch: Match) => {
 		onEdit(updatedMatch);
 		setIsEditing(false);

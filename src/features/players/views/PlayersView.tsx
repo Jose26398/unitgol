@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AchievementsInfoModal } from "@/features/players/components/AchievementsInfoModal";
 import { NewPlayerForm } from "@/features/players/components/NewPlayerForm";
 import { PlayerCard } from "@/features/players/components/PlayerCard";
 import type { Match, Player, Season } from "@/types";
-import type { RatingMode } from "@/utils/elo";
+import { calculateEloRatings, type RatingMode } from "@/utils/elo";
 
 interface PlayersViewProps {
 	players: Player[];
@@ -40,6 +40,10 @@ export function PlayersView({
 	const [showAchievementsInfo, setShowAchievementsInfo] = useState(false);
 	const visiblePlayers = players.filter(
 		(p: Player) => !selectedSeasonId || p.seasonId === selectedSeasonId,
+	);
+	const eloRatings = useMemo(
+		() => calculateEloRatings(matches, selectedSeasonId),
+		[matches, selectedSeasonId],
 	);
 	return (
 		<>
@@ -91,6 +95,7 @@ export function PlayersView({
 							seasons={seasons}
 							isAdmin={isAdmin}
 							ratingMode={ratingMode}
+							eloRatings={eloRatings}
 						/>
 					))}
 				</div>
