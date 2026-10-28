@@ -44,9 +44,7 @@ export function TeamGenerator({
 			return;
 		}
 		const eloRatings =
-			ratingMode === "elo"
-				? calculateEloRatings(matches, seasonId)
-				: null;
+			ratingMode === "elo" ? calculateEloRatings(matches, seasonId) : null;
 		setTeams(
 			generateBalancedTeams(
 				selectedPlayers,
@@ -65,7 +63,14 @@ export function TeamGenerator({
 					<h2 className="text-xl font-semibold">Generador de Equipos</h2>
 				</div>
 				<div className="flex flex-col-reverse gap-2 sm:flex-row">
-					{teams && <ShareButton teams={teams} />}
+					{teams && (
+						<ShareButton
+							teams={teams}
+							seasonId={seasonId}
+							matches={matches}
+							ratingMode={ratingMode}
+						/>
+					)}
 					<button
 						type="button"
 						onClick={handleGenerateTeams}
@@ -96,6 +101,7 @@ export function TeamGenerator({
 					<TeamDisplay
 						teamName="Equipo A"
 						players={teams.teamA}
+						allPlayers={players}
 						matches={matches}
 						seasonId={seasonId}
 						ratingMode={ratingMode}
@@ -103,6 +109,7 @@ export function TeamGenerator({
 					<TeamDisplay
 						teamName="Equipo B"
 						players={teams.teamB}
+						allPlayers={players}
 						matches={matches}
 						seasonId={seasonId}
 						ratingMode={ratingMode}
