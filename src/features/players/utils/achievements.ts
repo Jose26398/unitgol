@@ -123,6 +123,14 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
 			matches.some((match) => goalsInMatch(player, match) >= 5),
 	},
 	{
+		id: "waiter",
+		emoji: "🧑🏼‍🍳",
+		name: "Camarero",
+		description: "3 asistencias en un partido",
+		isUnlocked: ({ player, matches }) =>
+			matches.some((match) => assistsInMatch(player, match) >= 3),
+	},
+	{
 		id: "wizard",
 		emoji: "🧙",
 		name: "Mago",
