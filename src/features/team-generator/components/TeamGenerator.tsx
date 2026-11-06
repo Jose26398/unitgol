@@ -1,13 +1,15 @@
 import { Shuffle, Users } from "lucide-react";
 import { useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { NewsCard } from "@/features/news/components/NewsCard";
+import { createTeamNews, type UnitGolNews } from "@/features/news/utils/news";
 import type { Match, Player } from "@/types";
 import {
 	calculateEloRatings,
 	getEloRating,
 	type RatingMode,
 } from "@/utils/elo";
-import { generateBalancedTeams } from "@/utils/playerStats";
+import { calculateScore, generateBalancedTeams } from "@/utils/playerStats";
 import { PlayerSelector } from "./PlayerSelector";
 import { TeamDisplay } from "./TeamDisplay";
 
@@ -15,6 +17,7 @@ interface TeamGeneratorProps {
 	players: Player[];
 	matches: Match[];
 	seasonId: string | null;
+	teamName?: string;
 	ratingMode: RatingMode;
 }
 
@@ -22,6 +25,7 @@ export function TeamGenerator({
 	players,
 	matches,
 	seasonId,
+	teamName,
 	ratingMode,
 }: TeamGeneratorProps) {
 	const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
@@ -29,6 +33,7 @@ export function TeamGenerator({
 		teamA: Player[];
 		teamB: Player[];
 	} | null>(null);
+	const [news, setNews] = useState<UnitGolNews | null>(null);
 
 	const handleTogglePlayer = (player: Player) => {
 		setSelectedPlayers((prev) =>
@@ -45,13 +50,31 @@ export function TeamGenerator({
 		}
 		const eloRatings =
 			ratingMode === "elo" ? calculateEloRatings(matches, seasonId) : null;
-		setTeams(
-			generateBalancedTeams(
-				selectedPlayers,
-				ratingMode === "elo"
-					? (player) => getEloRating(eloRatings, player.id)
-					: undefined,
-			),
+		const getPlayerValue = (player: Player) =>
+			ratingMode === "elo"
+				? getEloRating(eloRatings, player.id)
+				: calculateScore(player);
+		const generatedTeams = generateBalancedTeams(
+			selectedPlayers,
+			getPlayerValue,
+		);
+		const teamAValue = generatedTeams.teamA.reduce(
+			(total, player) => total + getPlayerValue(player),
+			0,
+		);
+		const teamBValue = generatedTeams.teamB.reduce(
+			(total, player) => total + getPlayerValue(player),
+			0,
+		);
+
+		setTeams(generatedTeams);
+		setNews(
+			createTeamNews(teamAValue, teamBValue, {
+				teamAPlayers: generatedTeams.teamA,
+				teamBPlayers: generatedTeams.teamB,
+				previousMatches: matches,
+				seasonId,
+			}),
 		);
 	};
 
@@ -97,24 +120,27 @@ export function TeamGenerator({
 			</div>
 
 			{teams && (
-				<div className="grid md:grid-cols-2 gap-6">
-					<TeamDisplay
-						teamName="Equipo A"
-						players={teams.teamA}
-						allPlayers={players}
-						matches={matches}
-						seasonId={seasonId}
-						ratingMode={ratingMode}
-					/>
-					<TeamDisplay
-						teamName="Equipo B"
-						players={teams.teamB}
-						allPlayers={players}
-						matches={matches}
-						seasonId={seasonId}
-						ratingMode={ratingMode}
-					/>
-				</div>
+				<>
+					<div className="grid md:grid-cols-2 gap-6">
+						<TeamDisplay
+							teamName="Equipo A"
+							players={teams.teamA}
+							allPlayers={players}
+							matches={matches}
+							seasonId={seasonId}
+							ratingMode={ratingMode}
+						/>
+						<TeamDisplay
+							teamName="Equipo B"
+							players={teams.teamB}
+							allPlayers={players}
+							matches={matches}
+							seasonId={seasonId}
+							ratingMode={ratingMode}
+						/>
+					</div>
+					{news && <NewsCard news={news} teamName={teamName} />}
+				</>
 			)}
 		</div>
 	);

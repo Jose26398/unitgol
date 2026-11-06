@@ -6,6 +6,7 @@ interface TeamGeneratorViewProps {
 	players: Player[];
 	matches: Match[];
 	selectedSeasonId: string | null;
+	teamName?: string;
 	ratingMode: RatingMode;
 }
 
@@ -13,6 +14,7 @@ export function TeamGeneratorView({
 	players,
 	matches,
 	selectedSeasonId,
+	teamName,
 	ratingMode,
 }: TeamGeneratorViewProps) {
 	const visiblePlayers = players.filter(
@@ -26,6 +28,7 @@ export function TeamGeneratorView({
 					players={visiblePlayers}
 					matches={matches}
 					seasonId={selectedSeasonId}
+					teamName={teamName}
 					ratingMode={ratingMode}
 				/>
 			) : (

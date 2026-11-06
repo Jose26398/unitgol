@@ -3,14 +3,18 @@ import type { Match, Player } from "@/types";
 
 interface NewMatchViewProps {
 	players: Player[];
+	matches: Match[];
 	selectedSeasonId: string | null;
+	teamName?: string;
 	isAdmin: boolean;
-	onAddMatch: (match: Omit<Match, "id">) => void;
+	onAddMatch: (match: Omit<Match, "id">) => Promise<unknown>;
 }
 
 export function NewMatchView({
 	players,
+	matches,
 	selectedSeasonId,
+	teamName,
 	isAdmin,
 	onAddMatch,
 }: NewMatchViewProps) {
@@ -19,6 +23,8 @@ export function NewMatchView({
 			{isAdmin ? (
 				<NewMatchForm
 					players={players}
+					matches={matches}
+					teamName={teamName}
 					onAddMatch={onAddMatch}
 					selectedSeasonId={selectedSeasonId}
 				/>

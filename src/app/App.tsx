@@ -70,7 +70,6 @@ function App() {
 	const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(
 		defaultSeasonId,
 	);
-
 	useEffect(() => {
 		setSelectedSeasonId((currentSeasonId) =>
 			currentSeasonId && seasons.some((season) => season.id === currentSeasonId)
@@ -168,7 +167,9 @@ function App() {
 								{activeTab === "newMatch" && (
 									<NewMatchView
 										players={players}
+										matches={matches}
 										selectedSeasonId={selectedSeasonId}
+										teamName={teamAuth?.team}
 										isAdmin={teamAuth?.isAdmin || false}
 										onAddMatch={addMatch}
 									/>
@@ -179,6 +180,7 @@ function App() {
 										players={players}
 										matches={matches}
 										selectedSeasonId={selectedSeasonId}
+										teamName={teamAuth?.team}
 										ratingMode={ratingMode}
 									/>
 								)}
