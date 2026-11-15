@@ -5,6 +5,7 @@ import type { Match, Player, Season } from "@/types";
 import { type EloRatings, getEloRating, type RatingMode } from "@/utils/elo";
 import { calculateScore, calculateWinRate } from "@/utils/playerStats";
 import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
+import { getPlayerAvatarUrl } from "../utils/playerAvatar";
 import { AchievementsSection } from "./AchievementsSection";
 import { PlayerEditModal } from "./PlayerEditModal";
 
@@ -14,7 +15,12 @@ interface PlayerCardProps {
 	matches: Match[];
 	seasonId: string | null;
 	onDelete?: (id: string) => void;
-	onEdit?: (id: string, updatedData: Partial<Omit<Player, "id">>) => void;
+	onEdit?: (
+		id: string,
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
+	) => Promise<void>;
 	seasons?: Season[];
 	isAdmin: boolean;
 	ratingMode: RatingMode;
@@ -35,6 +41,8 @@ export function PlayerCard({
 }: PlayerCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
+	const [deleteError, setDeleteError] = useState("");
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const winRate = calculateWinRate(player);
 	const calculatePoints = (player: Player) =>
@@ -43,103 +51,156 @@ export function PlayerCard({
 			: calculateScore(player);
 
 	const recentForm = calculateRecentForm(player, matches, seasonId);
+	const playerRating = calculatePoints(player);
 	const achievementMatches = matches.filter(
 		(match) => !seasonId || match.seasonId === seasonId,
 	);
 
-	const handleSave = (updatedData: Partial<Omit<Player, "id">>) => {
+	const handleSave = async (
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
+	) => {
 		if (onEdit) {
-			onEdit(player.id, updatedData);
+			await onEdit(player.id, updatedData, avatarFile, removeAvatar);
 		}
 		setIsEditing(false);
 	};
 
+	const handleDelete = async () => {
+		if (!onDelete) return;
+		setIsDeleting(true);
+		setDeleteError("");
+		try {
+			await onDelete(player.id);
+			setDeleteConfirm(false);
+		} catch (error) {
+			setDeleteError(
+				error instanceof Error
+					? error.message
+					: "No se pudo eliminar el jugador.",
+			);
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
 	return (
-		<div className="bg-white rounded-lg shadow-md p-5 hover:shadow-xl transition-shadow">
-			{/* Header */}
-			<div className="flex items-center justify-between mb-4">
-				<div className="flex items-center gap-4">
-					<User className="w-10 h-10 text-emerald-600" />
-					<h3 className="text-xl font-bold text-gray-800">{player.name}</h3>
+		<div className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md shadow-slate-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+			<div className="relative isolate aspect-7/8 overflow-hidden bg-linear-to-br from-emerald-700 via-slate-800 to-slate-950">
+				{player.avatarPath ? (
+					<img
+						src={getPlayerAvatarUrl(player.avatarPath)}
+						alt={`Foto de ${player.name}`}
+						className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+					/>
+				) : (
+					<div className="absolute inset-0 grid place-items-center">
+						<User className="h-28 w-28 text-white/35" />
+					</div>
+				)}
+				<div
+					aria-hidden="true"
+					className="absolute inset-0 bg-linear-to-b from-slate-950/15 via-transparent to-slate-950/90"
+				/>
+				<div className="absolute left-4 top-4 flex min-w-14 flex-col items-center rounded-xl border border-white/60 bg-white/90 px-3 py-2 text-slate-900 shadow-lg backdrop-blur-md">
+					<span className="text-2xl font-black leading-none">
+						{playerRating.toFixed(ratingMode === "elo" ? 0 : 1)}
+					</span>
+					<span className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em]">
+						{ratingMode === "elo" ? "ELO" : "PTS"}
+					</span>
 				</div>
-				<div className="flex items-center gap-3">
+				<div className="absolute right-4 top-4 flex gap-1.5">
 					{isAdmin && onEdit && (
 						<button
 							type="button"
 							onClick={() => setIsEditing(true)}
-							className="rounded-full text-emerald-600 hover:text-emerald-200 transition-colors"
+							className="grid h-9 w-9 place-items-center rounded-full bg-slate-950/50 text-white shadow-sm ring-1 ring-white/50 backdrop-blur-md transition hover:bg-white hover:text-emerald-800 focus-visible:outline-2 focus-visible:outline-white"
 							title="Editar jugador"
 							aria-label="Editar jugador"
 						>
-							<Edit className="w-5 h-5" />
+							<Edit className="h-4 w-4" />
 						</button>
 					)}
 					{isAdmin && onDelete && (
 						<button
 							type="button"
-							onClick={() => setDeleteConfirm(true)}
-							className="rounded-full text-red-600 hover:text-red-200 transition-colors"
+							onClick={() => {
+								setDeleteError("");
+								setDeleteConfirm(true);
+							}}
+							className="grid h-9 w-9 place-items-center rounded-full bg-slate-950/50 text-white shadow-sm ring-1 ring-white/50 backdrop-blur-md transition hover:bg-white hover:text-red-700 focus-visible:outline-2 focus-visible:outline-white"
 							title="Eliminar jugador"
 							aria-label="Eliminar jugador"
 						>
-							<Trash2 className="w-5 h-5" />
+							<Trash2 className="h-4 w-4" />
 						</button>
 					)}
 				</div>
+				<div className="absolute inset-x-4 bottom-3 text-white">
+					<h3 className="mb-2 wrap-break-word text-xl font-black uppercase leading-tight tracking-wide drop-shadow sm:text-2xl">
+						{player.name}
+					</h3>
+					<div className="flex items-end justify-between gap-3">
+						<div className="min-w-0 flex-1">
+							<AchievementsSection
+								player={player}
+								players={players}
+								matches={achievementMatches}
+							/>
+						</div>
+						<div className="shrink-0 text-right">
+							<p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-300">
+								Forma reciente
+							</p>
+							<p className="text-sm">
+								{recentForm.results.length > 0
+									? recentForm.results
+											.map((result) => recentFormSymbols[result])
+											.join(" ")
+									: "⚪"}
+							</p>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			{/* Stats Grid */}
-			<div className="grid grid-cols-2 gap-4 text-sm">
-				<div>
-					<p className="text-gray-500">Partidos V/E/D</p>
-					<p className="text-lg font-medium text-gray-800">
+			<div className="grid grid-cols-2 gap-x-5 bg-linear-to-br from-white to-slate-50 px-4 py-3">
+				<div className="border-b border-slate-200 py-2">
+					<p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+						Partidos V/E/D
+					</p>
+					<p className="text-lg font-black tabular-nums text-slate-800">
 						{player.wins}/{player.matches - player.wins - player.losses}/
 						{player.losses}
 					</p>
 				</div>
-				<div>
-					<p className="text-gray-500">Tasa de victorias</p>
-					<p className="text-lg font-medium text-gray-800">
+				<div className="border-b border-slate-200 py-2">
+					<p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+						Victorias
+					</p>
+					<p className="text-lg font-black tabular-nums text-slate-800">
 						{winRate.toFixed(1)}%
 					</p>
 				</div>
-				<div>
-					<p className="text-gray-500">Goles</p>
-					<p className="text-lg font-medium text-gray-800">{player.goals}</p>
-				</div>
-				<div>
-					<p className="text-gray-500">Asistencias</p>
-					<p className="text-lg font-medium text-gray-800">{player.assists}</p>
-				</div>
-			</div>
-
-			{/* Player Score */}
-			<div className="flex justify-between mt-6">
-				<div className="mt-5 pt-4 border-t border-gray-200">
-					<p className="text-gray-500 text-sm">
-						{ratingMode === "elo" ? "Rating ELO" : "Puntuación del jugador"}
+				<div className="py-2">
+					<p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+						Goles
 					</p>
-					<p className="text-2xl font-bold text-emerald-600">
-						{calculatePoints(player).toFixed(1)}
+					<p className="text-lg font-black tabular-nums text-slate-800">
+						{player.goals}
 					</p>
 				</div>
-				<div className="mt-5 pt-4 text-sm">
-					<p className="text-gray-500">Forma reciente</p>
-					<p className="mt-1 text-lg">
-						{recentForm.results.length > 0
-							? recentForm.results
-									.map((result) => recentFormSymbols[result])
-									.join(" ")
-							: "⚪"}
+				<div className="py-2">
+					<p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+						Asistencias
+					</p>
+					<p className="text-lg font-black tabular-nums text-slate-800">
+						{player.assists}
 					</p>
 				</div>
 			</div>
-
-			<AchievementsSection
-				player={player}
-				players={players}
-				matches={achievementMatches}
-			/>
 
 			{/* Modal for editing */}
 			{isEditing && (
@@ -158,10 +219,9 @@ export function PlayerCard({
 				confirmText="Eliminar"
 				cancelText="Cancelar"
 				onCancel={() => setDeleteConfirm(false)}
-				onConfirm={() => {
-					if (onDelete) onDelete(player.id);
-					setDeleteConfirm(false);
-				}}
+				onConfirm={handleDelete}
+				errorMessage={deleteError}
+				isConfirming={isDeleting}
 			/>
 		</div>
 	);

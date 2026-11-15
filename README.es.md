@@ -72,6 +72,14 @@ Sigue los partidos, las estadísticas de los jugadores y genera automáticamente
     pnpm build
     ```
 
+### Fotos de jugadores
+
+Antes de desplegar esta versión, aplica la migración
+`supabase/migrations/20261114000000_player_avatars_and_team_limit.sql` en tu
+proyecto Supabase. La migración configura el bucket de fotos (con lectura
+pública), limita cada foto a 2 MB, solo JPG, PNG o WebP. La base de
+datos también limita cada equipo a 100 jugadores.
+
 ## 📁 Estructura del proyecto
 
 ```lua

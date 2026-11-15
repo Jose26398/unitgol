@@ -17,8 +17,13 @@ interface PlayersViewProps {
 			Player,
 			"id" | "matches" | "wins" | "losses" | "goals" | "assists"
 		> & { seasonId: string },
-	) => void;
-	onEditPlayer: (id: string, updatedData: Partial<Omit<Player, "id">>) => void;
+	) => Promise<unknown>;
+	onEditPlayer: (
+		id: string,
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
+	) => Promise<void>;
 	onDeletePlayer: (id: string) => void;
 	onOpenSummary: () => void;
 	onOpenComparer: () => void;
@@ -59,7 +64,7 @@ export function PlayersView({
 					<button
 						type="button"
 						onClick={onOpenComparer}
-						className="flex-1 bg-emerald-600 text-white p-6 rounded-lg shadow-md hover:bg-emerald-700"
+						className="flex-1 w-32 bg-emerald-600 text-white p-6 rounded-lg shadow-md hover:bg-emerald-700"
 					>
 						Cara a Cara
 					</button>
@@ -75,6 +80,7 @@ export function PlayersView({
 					<NewPlayerForm
 						onAddPlayer={onAddPlayer}
 						selectedSeasonId={selectedSeasonId}
+						playerCount={players.length}
 					/>
 				)}
 			</div>
@@ -82,7 +88,7 @@ export function PlayersView({
 				<AchievementsInfoModal onClose={() => setShowAchievementsInfo(false)} />
 			)}
 			{visiblePlayers.length > 0 ? (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 					{visiblePlayers.map((player: Player) => (
 						<PlayerCard
 							key={player.id}

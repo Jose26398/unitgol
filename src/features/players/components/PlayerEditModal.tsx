@@ -1,10 +1,16 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import type { Player, Season } from "@/types";
+import { getPlayerAvatarUrl } from "../utils/playerAvatar";
 
 interface PlayerEditModalProps {
 	player: Player;
 	seasons?: Season[];
-	onSave: (updatedData: Partial<Omit<Player, "id">>) => void;
+	onSave: (
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
+	) => Promise<void>;
 	onCancel: () => void;
 }
 
@@ -21,16 +27,40 @@ export function PlayerEditModal({
 		assists: player.assists,
 		seasonId: player.seasonId,
 	});
+	const [avatarFile, setAvatarFile] = useState<File | undefined>();
+	const [removeAvatar, setRemoveAvatar] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState("");
 
-	const handleSave = () => {
-		onSave(editedData);
+	const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setSaving(true);
+		setError("");
+		try {
+			await onSave(editedData, avatarFile, removeAvatar);
+		} catch (saveError) {
+			setError(
+				saveError instanceof Error
+					? saveError.message
+					: "No se pudo guardar el jugador.",
+			);
+		} finally {
+			setSaving(false);
+		}
 	};
 
-	return (
-		<div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-			<div className="bg-white p-6 rounded-lg shadow-lg w-96">
-				<h2 className="text-xl font-semibold mb-4">Editar Jugador</h2>
-				<form className="space-y-3">
+	return createPortal(
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="edit-player-title"
+				className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+			>
+				<form onSubmit={handleSave} className="space-y-3">
+					<h2 id="edit-player-title" className="text-xl font-semibold">
+						Editar Jugador
+					</h2>
 					<div>
 						<label
 							htmlFor="player-name"
@@ -47,6 +77,43 @@ export function PlayerEditModal({
 								setEditedData({ ...editedData, name: e.target.value })
 							}
 						/>
+					</div>
+					<div>
+						<label
+							htmlFor="player-avatar"
+							className="block text-sm font-medium text-gray-600"
+						>
+							Foto (JPG, PNG o WebP; máximo 2 MB)
+						</label>
+						{player.avatarPath && (
+							<img
+								src={getPlayerAvatarUrl(player.avatarPath)}
+								alt={`Foto de ${player.name}`}
+								className="w-16 h-16 rounded-full object-cover my-2"
+							/>
+						)}
+						<input
+							id="player-avatar"
+							type="file"
+							accept="image/jpeg,image/png,image/webp"
+							className="w-full text-sm border cursor-pointer border-gray-300 rounded-sm px-3 py-2"
+							onChange={(event) => {
+								setAvatarFile(event.target.files?.[0]);
+								setRemoveAvatar(false);
+							}}
+						/>
+						{player.avatarPath && (
+							<button
+								type="button"
+								onClick={() => {
+									setAvatarFile(undefined);
+									setRemoveAvatar(!removeAvatar);
+								}}
+								className="text-sm text-red-600 mt-1 border border-red-600 px-2 py-1 rounded hover:bg-red-600 hover:text-white transition"
+							>
+								{removeAvatar ? "Conservar foto" : "Eliminar foto"}
+							</button>
+						)}
 					</div>
 					<div>
 						<label
@@ -123,24 +190,31 @@ export function PlayerEditModal({
 							</select>
 						</div>
 					)}
+					{error && (
+						<p className="text-red-600 text-sm mt-3" role="alert">
+							{error}
+						</p>
+					)}
+					<div className="flex justify-end gap-3 mt-4">
+						<button
+							type="button"
+							onClick={onCancel}
+							disabled={saving}
+							className="px-4 py-2 bg-gray-300 text-gray-700 rounded-sm hover:bg-gray-400"
+						>
+							Cancelar
+						</button>
+						<button
+							type="submit"
+							disabled={saving}
+							className="px-4 py-2 bg-emerald-600 text-white rounded-sm hover:bg-emerald-700"
+						>
+							{saving ? "Guardando..." : "Guardar"}
+						</button>
+					</div>
 				</form>
-				<div className="flex justify-end gap-3 mt-4">
-					<button
-						type="button"
-						onClick={onCancel}
-						className="px-4 py-2 bg-gray-300 text-gray-700 rounded-sm hover:bg-gray-400"
-					>
-						Cancelar
-					</button>
-					<button
-						type="button"
-						onClick={handleSave}
-						className="px-4 py-2 bg-emerald-600 text-white rounded-sm hover:bg-emerald-700"
-					>
-						Guardar
-					</button>
-				</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 }

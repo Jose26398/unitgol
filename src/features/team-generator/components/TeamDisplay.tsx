@@ -48,18 +48,26 @@ export function TeamDisplay({
 				{teamName} {ratingMode === "elo" ? "ELO" : "🌟"}
 				<span className="italic">{teamScore}</span>
 			</h3>
-			<div className="space-y-4">
-				{players.map((player) => (
-					<PlayerCard
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				{players.map((player, index) => (
+					<div
 						key={player.id}
-						player={player}
-						players={allPlayers}
-						matches={matches}
-						seasonId={seasonId}
-						isAdmin={false}
-						ratingMode={ratingMode}
-						eloRatings={eloRatings ?? undefined}
-					/>
+						className={
+							index === 0
+								? "sm:col-span-2 sm:mx-auto sm:w-full sm:max-w-sm"
+								: ""
+						}
+					>
+						<PlayerCard
+							player={player}
+							players={allPlayers}
+							matches={matches}
+							seasonId={seasonId}
+							isAdmin={false}
+							ratingMode={ratingMode}
+							eloRatings={eloRatings ?? undefined}
+						/>
+					</div>
 				))}
 			</div>
 		</div>

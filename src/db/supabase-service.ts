@@ -30,9 +30,16 @@ export class SupabaseService {
 
 	async updatePlayer(
 		id: string,
-		updatedData: Partial<Omit<Player, "id">>,
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
 	): Promise<void> {
-		return this.playerRepo.updatePlayer(id, updatedData);
+		return this.playerRepo.updatePlayer(
+			id,
+			updatedData,
+			avatarFile,
+			removeAvatar,
+		);
 	}
 
 	async getAllPlayers(): Promise<Player[]> {

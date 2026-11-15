@@ -8,21 +8,36 @@ interface NewPlayerFormProps {
 			Player,
 			"id" | "matches" | "wins" | "losses" | "goals" | "assists"
 		> & { seasonId: string },
-	) => void;
+	) => Promise<unknown>;
 	selectedSeasonId: string | null;
+	playerCount: number;
 }
 
 export function NewPlayerForm({
 	onAddPlayer,
 	selectedSeasonId,
+	playerCount,
 }: NewPlayerFormProps) {
 	const [name, setName] = useState("");
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState("");
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (name.trim() && selectedSeasonId) {
-			onAddPlayer({ name: name.trim(), seasonId: selectedSeasonId });
+		if (!name.trim() || !selectedSeasonId || playerCount >= 100) return;
+		setSaving(true);
+		setError("");
+		try {
+			await onAddPlayer({ name: name.trim(), seasonId: selectedSeasonId });
 			setName("");
+		} catch (addError) {
+			setError(
+				addError instanceof Error
+					? addError.message
+					: "No se pudo añadir el jugador.",
+			);
+		} finally {
+			setSaving(false);
 		}
 	};
 
@@ -43,14 +58,26 @@ export function NewPlayerForm({
 					placeholder="Nombre del jugador"
 					className="flex-1 border rounded-md p-2"
 					required
+					disabled={saving || playerCount >= 100}
 				/>
+				{playerCount >= 100 && (
+					<p className="text-red-600 text-sm self-center">
+						El equipo ya tiene el máximo de 100 jugadores.
+					</p>
+				)}
 				<button
 					type="submit"
+					disabled={saving || playerCount >= 100}
 					className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
 				>
-					Añadir jugador
+					{saving ? "Añadiendo..." : "Añadir jugador"}
 				</button>
 			</div>
+			{error && (
+				<p className="text-red-600 text-sm mt-3" role="alert">
+					{error}
+				</p>
+			)}
 		</form>
 	);
 }
