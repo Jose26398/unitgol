@@ -150,11 +150,13 @@ function PitchPlayerCard({
 	assigned,
 	teamColor = "A",
 	ratingMode,
+	size = "normal",
 	onClick,
 }: {
 	assigned: AssignedPlayer;
 	teamColor: "A" | "B";
 	ratingMode: RatingMode;
+	size?: "compact" | "normal";
 	onClick?: () => void;
 }) {
 	const { player, tacticalPosition, score, slotLabel } = assigned;
@@ -166,17 +168,61 @@ function PitchPlayerCard({
 			? "border-sky-400/90 shadow-sky-500/20 hover:border-sky-300 hover:shadow-sky-400/50"
 			: "border-amber-400/90 shadow-amber-500/20 hover:border-amber-300 hover:shadow-amber-400/50";
 
+	// VISTA COMPACTA MÓVIL: Tarjetas más pequeñas, sin chip de posición y sin Eq. A/Eq. B
+	if (size === "compact") {
+		return (
+			<button
+				type="button"
+				onClick={onClick}
+				className={`group relative flex flex-col w-[58px] min-[380px]:w-[64px] min-[420px]:w-[68px] rounded-lg overflow-hidden border-2 ${teamBorder} bg-slate-950 shadow-md transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer text-left select-none shrink-0`}
+				title={`${player.name} (${slotLabel}) - ${
+					ratingMode === "elo" ? "ELO" : "Puntos"
+				}: ${score.toFixed(1)}`}
+			>
+				{/* Foto limpia compacta */}
+				<div className="relative w-full h-[46px] min-[380px]:h-[52px] overflow-hidden bg-slate-900">
+					{player.avatarPath ? (
+						<img
+							src={getPlayerAvatarUrl(player.avatarPath)}
+							alt={player.name}
+							className="w-full h-full object-cover"
+						/>
+					) : (
+						<div className="w-full h-full flex items-center justify-center bg-linear-to-b from-slate-800 to-slate-950 text-slate-400">
+							<User className="w-5 h-5" />
+						</div>
+					)}
+				</div>
+
+				{/* Pie compacto: Solo Nombre y Puntuación (Sin chip de posición y sin distintivo Eq. A / Eq. B) */}
+				<div className="flex flex-col items-center justify-center w-full px-0.5 py-0.5 bg-slate-950 text-center border-t border-white/5">
+					<span className="w-full text-[8px] min-[380px]:text-[8.5px] font-black truncate text-white leading-tight">
+						{player.name}
+					</span>
+					<span className="text-[7.5px] min-[380px]:text-[8px] font-mono font-bold text-amber-300 leading-tight">
+						{Math.round(score)}
+					</span>
+				</div>
+			</button>
+		);
+	}
+
+	const cardWidth = "w-[88px] sm:w-[98px]";
+	const photoHeight = "h-[82px] sm:h-[94px]";
+
 	return (
 		<button
 			type="button"
 			onClick={onClick}
-			className={`group relative flex flex-col w-[88px] sm:w-[98px] rounded-xl overflow-hidden border-2 ${teamBorder} bg-slate-950 shadow-2xl transition-all duration-300 hover:-translate-y-1.5 hover:scale-105 cursor-pointer text-left select-none`}
+			className={`group relative flex flex-col ${cardWidth} rounded-xl overflow-hidden border-2 ${teamBorder} bg-slate-950 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 cursor-pointer text-left select-none shrink-0`}
 			title={`${player.name} (${slotLabel}) - ${
 				ratingMode === "elo" ? "ELO" : "Puntos"
 			}: ${score.toFixed(1)}`}
 		>
-			{/* FOTO 100% LIMPIA DEL JUGADOR (Sin ningún elemento que tape la cara) */}
-			<div className="relative w-full h-[82px] sm:h-[94px] overflow-hidden bg-slate-900">
+			{/* FOTO 100% LIMPIA DEL JUGADOR */}
+			<div
+				className={`relative w-full ${photoHeight} overflow-hidden bg-slate-900`}
+			>
 				{player.avatarPath ? (
 					<img
 						src={getPlayerAvatarUrl(player.avatarPath)}
@@ -191,10 +237,10 @@ function PitchPlayerCard({
 			</div>
 
 			{/* BARRA INTERMEDIA ADHERIDA: Posición a la izquierda y Puntuación a la derecha */}
-			<div className="flex items-center justify-between w-full px-1.5 py-1 bg-slate-900/95 border-t border-white/10 gap-1">
+			<div className="flex items-center justify-between w-full px-1.5 py-1 bg-slate-900/95 border-t border-white/10 gap-0.5">
 				{/* Chip Posición Completo */}
 				<span
-					className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold ${posInfo.badgeBg} text-white shadow-xs truncate`}
+					className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-bold ${posInfo.badgeBg} text-white shadow-xs truncate`}
 				>
 					<PosIcon className="w-2.5 h-2.5 shrink-0" />
 					<span className="truncate">{posInfo.label}</span>
@@ -304,14 +350,14 @@ export function SoccerPitchView({
 	return (
 		<div className="w-full space-y-4">
 			{/* Cabecera de Equipos y Controles */}
-			<div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900 text-white p-4 rounded-xl shadow-md border border-slate-800">
+			<div className="flex flex-row items-center justify-between gap-2 bg-slate-900 text-white p-3 sm:p-4 rounded-xl shadow-md border border-slate-800">
 				{/* Equipo A */}
-				<div className="flex items-center gap-3">
-					<div className="w-3.5 h-3.5 rounded-full bg-sky-400 ring-2 ring-sky-300" />
+				<div className="flex items-center gap-2 sm:gap-3">
+					<div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-sky-400 ring-2 ring-sky-300 shrink-0" />
 					<div>
-						<h4 className="font-bold text-base text-sky-400">Equipo A</h4>
-						<p className="text-xs text-slate-400 font-mono">
-							{ratingMode === "elo" ? "ELO: " : "Puntos: "}
+						<h4 className="font-bold text-sm text-sky-400">Equipo A</h4>
+						<p className="text-[11px] sm:text-xs text-slate-300 font-mono">
+							{ratingMode === "elo" ? "ELO: " : "PTS: "}
 							<span className="text-white font-bold">
 								{formationA.score.toFixed(1)}
 							</span>
@@ -325,26 +371,28 @@ export function SoccerPitchView({
 						type="button"
 						onClick={handleSharePitchImage}
 						disabled={isGeneratingImage}
-						className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg border border-emerald-500 shadow transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-						title="Descargar o compartir imagen de la distribución táctica"
+						className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg border border-emerald-500 shadow transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+						title="Descargar o compartir imagen de la distribución táctica (siempre horizontal)"
 					>
-						<Camera className="w-3.5 h-3.5" />
-						{isGeneratingImage ? "Generando captura..." : "Captura del Campo"}
+						<Camera className="w-3.5 h-3.5 shrink-0" />
+						<span className="truncate">
+							{isGeneratingImage ? "Generando..." : "Captura del Campo"}
+						</span>
 					</button>
 				</div>
 
 				{/* Equipo B */}
-				<div className="flex items-center gap-3 sm:text-right">
+				<div className="flex items-center gap-2 sm:gap-3 text-right">
 					<div>
-						<h4 className="font-bold text-base text-amber-400">Equipo B</h4>
-						<p className="text-xs text-slate-400 font-mono">
-							{ratingMode === "elo" ? "ELO: " : "Puntos: "}
+						<h4 className="font-bold text-sm text-amber-400">Equipo B</h4>
+						<p className="text-[11px] sm:text-xs text-slate-300 font-mono">
+							{ratingMode === "elo" ? "ELO: " : "PTS: "}
 							<span className="text-white font-bold">
 								{formationB.score.toFixed(1)}
 							</span>
 						</p>
 					</div>
-					<div className="w-3.5 h-3.5 rounded-full bg-amber-400 ring-2 ring-amber-300" />
+					<div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-amber-400 ring-2 ring-amber-300 shrink-0" />
 				</div>
 			</div>
 
@@ -354,8 +402,232 @@ export function SoccerPitchView({
 				</div>
 			)}
 
-			{/* CAMPO DE FÚTBOL ALARGADO Y MÁS ALTO (Aprovechando todo el ancho disponible) */}
-			<div className="w-full overflow-x-auto pb-4">
+			{/* ================= VISTA MÓVIL: CAMPO ENCAJADO EN VERTICAL COMPACTO ================= */}
+			<div className="block md:hidden w-full">
+				<div className="relative mx-auto w-full max-w-[380px] overflow-hidden rounded-2xl border-4 border-emerald-950 bg-emerald-800 shadow-xl p-1.5 select-none">
+					{/* Césped a rayas horizontales */}
+					<div
+						className="absolute inset-0 pointer-events-none opacity-40"
+						style={{
+							backgroundImage:
+								"repeating-linear-gradient(180deg, #15803d 0px, #15803d 28px, #166534 28px, #166534 56px)",
+						}}
+					/>
+
+					{/* Líneas blancas del campo vertical compactas */}
+					<div className="absolute inset-1.5 border-2 border-white/60 pointer-events-none rounded-md">
+						{/* Portería superior (Equipo A) */}
+						<div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-16 h-1.5 border-2 border-white/80 bg-white/20" />
+						{/* Área de penalti superior */}
+						<div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-12 border-b-2 border-x-2 border-white/60 rounded-b-sm" />
+						<div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-6 border-b-2 border-x-2 border-white/60" />
+
+						{/* Línea horizontal de medio campo */}
+						<div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/60 -translate-y-1/2" />
+						{/* Círculo central */}
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/60 rounded-full" />
+
+						{/* Área de penalti inferior (Equipo B) */}
+						<div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-36 h-12 border-t-2 border-x-2 border-white/60 rounded-t-sm" />
+						<div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 border-t-2 border-x-2 border-white/60" />
+						{/* Portería inferior */}
+						<div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-16 h-1.5 border-2 border-white/80 bg-white/20" />
+					</div>
+
+					{/* CONTENIDO INTERACTIVO VERTICAL (COMPACTO Y MENOS LARGO) */}
+					<div className="relative z-10 flex flex-col justify-between py-1 space-y-2">
+						{/* ================= MITAD SUPERIOR: EQUIPO A ================= */}
+						<div className="flex flex-col space-y-1.5">
+							{/* Fila 1: Portero Equipo A */}
+							<div className="flex justify-center items-center">
+								<PitchPlayerCard
+									assigned={formationA.portero}
+									teamColor="A"
+									ratingMode={ratingMode}
+									size="compact"
+									onClick={() => onPlayerClick?.(formationA.portero.player)}
+								/>
+							</div>
+
+							{/* Fila 2: Defensas Equipo A (2) */}
+							<div className="flex justify-around items-center px-4">
+								{formationA.defensas[0] && (
+									<PitchPlayerCard
+										assigned={formationA.defensas[0]}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() =>
+											onPlayerClick?.(formationA.defensas[0].player)
+										}
+									/>
+								)}
+								{formationA.defensas[1] && (
+									<PitchPlayerCard
+										assigned={formationA.defensas[1]}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() =>
+											onPlayerClick?.(formationA.defensas[1].player)
+										}
+									/>
+								)}
+							</div>
+
+							{/* Fila 3: Bandas y Medio Equipo A (3: Banda Izq, Medio Centro, Banda Dch) */}
+							<div className="flex justify-between items-center px-1">
+								{formationA.bandas[0] ? (
+									<PitchPlayerCard
+										assigned={formationA.bandas[0]}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationA.bandas[0].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+								{formationA.medios[0] ? (
+									<PitchPlayerCard
+										assigned={formationA.medios[0]}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationA.medios[0].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+								{formationA.bandas[1] ? (
+									<PitchPlayerCard
+										assigned={formationA.bandas[1]}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationA.bandas[1].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+							</div>
+
+							{/* Fila 4: Estaca Equipo A (1 encarando la línea central) */}
+							<div className="flex justify-center items-center">
+								{formationA.estacas.map((assigned) => (
+									<PitchPlayerCard
+										key={assigned.player.id}
+										assigned={assigned}
+										teamColor="A"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(assigned.player)}
+									/>
+								))}
+							</div>
+						</div>
+
+						{/* ================= MEDIO CAMPO: BALÓN CENTRADO ================= */}
+						<div className="flex items-center justify-center py-1 z-20">
+							<SoccerBall className="w-7 h-7" />
+						</div>
+
+						{/* ================= MITAD INFERIOR: EQUIPO B ================= */}
+						<div className="flex flex-col space-y-1.5">
+							{/* Fila 5: Estaca Equipo B (1 encarando la línea central) */}
+							<div className="flex justify-center items-center">
+								{formationB.estacas.map((assigned) => (
+									<PitchPlayerCard
+										key={assigned.player.id}
+										assigned={assigned}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(assigned.player)}
+									/>
+								))}
+							</div>
+
+							{/* Fila 6: Bandas y Medio Equipo B (3: Banda Izq, Medio Centro, Banda Dch) */}
+							<div className="flex justify-between items-center px-1">
+								{formationB.bandas[0] ? (
+									<PitchPlayerCard
+										assigned={formationB.bandas[0]}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationB.bandas[0].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+								{formationB.medios[0] ? (
+									<PitchPlayerCard
+										assigned={formationB.medios[0]}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationB.medios[0].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+								{formationB.bandas[1] ? (
+									<PitchPlayerCard
+										assigned={formationB.bandas[1]}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() => onPlayerClick?.(formationB.bandas[1].player)}
+									/>
+								) : (
+									<div className="w-[58px]" />
+								)}
+							</div>
+
+							{/* Fila 7: Defensas Equipo B (2) */}
+							<div className="flex justify-around items-center px-4">
+								{formationB.defensas[0] && (
+									<PitchPlayerCard
+										assigned={formationB.defensas[0]}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() =>
+											onPlayerClick?.(formationB.defensas[0].player)
+										}
+									/>
+								)}
+								{formationB.defensas[1] && (
+									<PitchPlayerCard
+										assigned={formationB.defensas[1]}
+										teamColor="B"
+										ratingMode={ratingMode}
+										size="compact"
+										onClick={() =>
+											onPlayerClick?.(formationB.defensas[1].player)
+										}
+									/>
+								)}
+							</div>
+
+							{/* Fila 8: Portero Equipo B */}
+							<div className="flex justify-center items-center">
+								<PitchPlayerCard
+									assigned={formationB.portero}
+									teamColor="B"
+									ratingMode={ratingMode}
+									size="compact"
+									onClick={() => onPlayerClick?.(formationB.portero.player)}
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* ================= VISTA ESCRITORIO: CAMPO HORIZONTAL AMPLIO ================= */}
+			<div className="hidden md:block w-full overflow-x-auto pb-4">
 				<div className="relative mx-auto w-full min-w-[1020px] overflow-hidden rounded-3xl border-4 border-emerald-950 bg-emerald-800 shadow-2xl p-4 sm:p-8 select-none">
 					{/* Césped a rayas verticales (Striped Turf Texture horizontal) */}
 					<div
