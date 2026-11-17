@@ -78,7 +78,11 @@ export function useDatabase() {
 			"id" | "matches" | "wins" | "losses" | "goals" | "assists"
 		> & { seasonId: string },
 	) => {
-		const playerId = await db.addPlayer(newPlayer.name, newPlayer.seasonId);
+		const playerId = await db.addPlayer(
+			newPlayer.name,
+			newPlayer.seasonId,
+			newPlayer.positions,
+		);
 		setPlayers((currentPlayers) =>
 			[
 				...currentPlayers,
@@ -91,6 +95,7 @@ export function useDatabase() {
 					goals: 0,
 					assists: 0,
 					seasonId: newPlayer.seasonId,
+					positions: newPlayer.positions,
 				},
 			].sort((a, b) => a.name.localeCompare(b.name)),
 		);

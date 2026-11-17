@@ -2,7 +2,8 @@ import {
 	PLAYER_AVATAR_BUCKET,
 	validatePlayerAvatar,
 } from "../../features/players/utils/playerAvatar";
-import type { Player } from "../../types";
+import type { Player, PlayerPosition } from "../../types";
+import type { Database } from "../../types/database.types";
 import { mapPlayerRow } from "../mappers";
 import { supabase } from "../supabase";
 
@@ -11,21 +12,25 @@ export class PlayerRepository {
 		name: string,
 		seasonId: string | undefined,
 		teamId: string | null,
+		positions?: PlayerPosition[],
 	): Promise<string> {
 		if (!teamId) throw new Error("Team not authenticated");
 
+		const playerInsert = {
+			name,
+			matches: 0,
+			wins: 0,
+			losses: 0,
+			goals: 0,
+			assists: 0,
+			season_id: seasonId || null,
+			team_id: teamId,
+			...(positions && positions.length > 0 ? { positions } : {}),
+		};
+
 		const { data, error } = await supabase
 			.from("players")
-			.insert({
-				name,
-				matches: 0,
-				wins: 0,
-				losses: 0,
-				goals: 0,
-				assists: 0,
-				season_id: seasonId || null,
-				team_id: teamId,
-			})
+			.insert(playerInsert)
 			.select()
 			.single();
 
@@ -39,8 +44,12 @@ export class PlayerRepository {
 		avatarFile?: File,
 		removeAvatar = false,
 	): Promise<void> {
-		const { seasonId, ...data } = updatedData;
-		const playerUpdate = { ...data, season_id: seasonId };
+		const { seasonId, teamId, ...data } = updatedData;
+		const playerUpdate: Database["public"]["Tables"]["players"]["Update"] = {
+			...data,
+			...(teamId !== undefined ? { team_id: teamId } : {}),
+			...(seasonId !== undefined ? { season_id: seasonId } : {}),
+		};
 
 		if (avatarFile) {
 			validatePlayerAvatar(avatarFile);
@@ -53,13 +62,13 @@ export class PlayerRepository {
 					upsert: true,
 				});
 			if (uploadError) throw uploadError;
-			Object.assign(playerUpdate, { avatar_path: avatarPath });
+			playerUpdate.avatar_path = avatarPath;
 		} else if (removeAvatar) {
 			const { error: removeError } = await supabase.storage
 				.from(PLAYER_AVATAR_BUCKET)
 				.remove([`${id}/avatar`]);
 			if (removeError) throw removeError;
-			Object.assign(playerUpdate, { avatar_path: null });
+			playerUpdate.avatar_path = null;
 		}
 
 		const { error } = await supabase
@@ -85,6 +94,7 @@ export class PlayerRepository {
         assists,
         season_id,
         avatar_path,
+        positions,
         seasons (
           id,
           name,
