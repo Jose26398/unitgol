@@ -40,6 +40,21 @@ describe("mapPlayerRow", () => {
 		});
 		expect(player.seasonId).toBeUndefined();
 	});
+
+	it("maps an avatar path when one is set", () => {
+		const player = mapPlayerRow({
+			id: "1",
+			name: "Alice",
+			matches: 0,
+			wins: 0,
+			losses: 0,
+			goals: 0,
+			assists: 0,
+			season_id: null,
+			avatar_path: "1/avatar",
+		});
+		expect(player.avatarPath).toBe("1/avatar");
+	});
 });
 
 describe("mapMatchWithRelations", () => {

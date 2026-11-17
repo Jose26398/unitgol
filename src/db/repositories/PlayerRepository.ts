@@ -1,3 +1,7 @@
+import {
+	PLAYER_AVATAR_BUCKET,
+	validatePlayerAvatar,
+} from "../../features/players/utils/playerAvatar";
 import type { Player } from "../../types";
 import { mapPlayerRow } from "../mappers";
 import { supabase } from "../supabase";
@@ -31,15 +35,36 @@ export class PlayerRepository {
 
 	async updatePlayer(
 		id: string,
-		updatedData: Partial<Omit<Player, "id">>,
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar = false,
 	): Promise<void> {
 		const { seasonId, ...data } = updatedData;
+		const playerUpdate = { ...data, season_id: seasonId };
+
+		if (avatarFile) {
+			validatePlayerAvatar(avatarFile);
+			const avatarPath = `${id}/avatar`;
+			const { error: uploadError } = await supabase.storage
+				.from(PLAYER_AVATAR_BUCKET)
+				.upload(avatarPath, avatarFile, {
+					cacheControl: "0",
+					contentType: avatarFile.type,
+					upsert: true,
+				});
+			if (uploadError) throw uploadError;
+			Object.assign(playerUpdate, { avatar_path: avatarPath });
+		} else if (removeAvatar) {
+			const { error: removeError } = await supabase.storage
+				.from(PLAYER_AVATAR_BUCKET)
+				.remove([`${id}/avatar`]);
+			if (removeError) throw removeError;
+			Object.assign(playerUpdate, { avatar_path: null });
+		}
+
 		const { error } = await supabase
 			.from("players")
-			.update({
-				...data,
-				season_id: seasonId,
-			})
+			.update(playerUpdate)
 			.eq("id", id);
 
 		if (error) throw error;
@@ -59,6 +84,7 @@ export class PlayerRepository {
         goals,
         assists,
         season_id,
+        avatar_path,
         seasons (
           id,
           name,
@@ -73,6 +99,11 @@ export class PlayerRepository {
 	}
 
 	async deletePlayer(id: string): Promise<void> {
+		const { error: avatarError } = await supabase.storage
+			.from(PLAYER_AVATAR_BUCKET)
+			.remove([`${id}/avatar`]);
+		if (avatarError) throw avatarError;
+
 		const { error } = await supabase.from("players").delete().eq("id", id);
 		if (error) throw error;
 	}

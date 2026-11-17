@@ -10,8 +10,9 @@ export function mapPlayerRow(player: {
 	goals: number;
 	assists: number;
 	season_id: string | null;
+	avatar_path?: string | null;
 }): Player {
-	return {
+	const mappedPlayer: Player = {
 		id: player.id,
 		name: player.name,
 		matches: player.matches,
@@ -21,6 +22,8 @@ export function mapPlayerRow(player: {
 		assists: player.assists,
 		seasonId: player.season_id || undefined,
 	};
+	if (player.avatar_path) mappedPlayer.avatarPath = player.avatar_path;
+	return mappedPlayer;
 }
 
 export function mapMatchWithRelations(match: MatchWithRelations): Match {

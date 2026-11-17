@@ -101,7 +101,8 @@ export class MatchRepository {
             losses,
             goals,
             assists,
-            season_id
+            season_id,
+            avatar_path
           )
         ),
         goals (

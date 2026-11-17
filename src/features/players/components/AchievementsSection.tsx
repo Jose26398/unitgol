@@ -15,35 +15,26 @@ export function AchievementsSection({
 	const achievements = getUnlockedAchievements({ player, players, matches });
 
 	return (
-		<section
-			className="mt-5 border-t border-gray-200 pt-4 cursor-default"
-			aria-label="Colección de logros"
-		>
-			<h4 className="mb-3 text-sm font-semibold text-gray-700">
-				Colección de logros
+		<section className="min-w-0" aria-label="Colección de logros">
+			<h4 className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white/75">
+				Logros
 			</h4>
 			{achievements.length > 0 ? (
-				<div className="grid grid-cols-3 gap-2">
+				<div className="flex flex-wrap gap-1.5">
 					{achievements.map((achievement) => (
 						<div
 							key={achievement.id}
-							className="flex gap-1 flex-row items-center border border-gray-300 hover:bg-emerald-50 rounded-md px-2 text-center"
-							title={achievement.description}
+							className="grid h-6 px-3 place-items-center rounded-full border border-white/35 bg-slate-950/25 text-xs text-white shadow-sm backdrop-blur-sm"
+							title={`${achievement.name}: ${achievement.description}`}
+							aria-label={`${achievement.name}: ${achievement.description}`}
+							role="img"
 						>
-							<div className="text-lg" aria-hidden="true">
-								{achievement.emoji}
-							</div>
-							<p className="text-xs font-semibold text-gray-800">
-								{achievement.name}
-							</p>
+							<span aria-hidden="true">{achievement.emoji} {achievement.name}</span>
 						</div>
 					))}
 				</div>
 			) : (
-				<p className="text-xs text-gray-500">
-					Aún no hay logros desbl
-oqueados.
-				</p>
+				<p className="text-[10px] text-white/65">Sin logros desbloqueados</p>
 			)}
 		</section>
 	);

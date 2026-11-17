@@ -8,6 +8,7 @@ export type PlayerRow = {
 	assists: number;
 	season_id: string | null;
 	created_at: string;
+	avatar_path?: string | null;
 };
 
 export type MatchRow = {

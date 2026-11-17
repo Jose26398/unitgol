@@ -78,18 +78,53 @@ export function useDatabase() {
 			"id" | "matches" | "wins" | "losses" | "goals" | "assists"
 		> & { seasonId: string },
 	) => {
-		return await db.addPlayer(newPlayer.name, newPlayer.seasonId);
+		const playerId = await db.addPlayer(newPlayer.name, newPlayer.seasonId);
+		setPlayers((currentPlayers) =>
+			[
+				...currentPlayers,
+				{
+					id: playerId,
+					name: newPlayer.name,
+					matches: 0,
+					wins: 0,
+					losses: 0,
+					goals: 0,
+					assists: 0,
+					seasonId: newPlayer.seasonId,
+				},
+			].sort((a, b) => a.name.localeCompare(b.name)),
+		);
+		return playerId;
 	};
 
 	const editPlayer = async (
 		id: string,
-		updatedData: Partial<Omit<Player, "id">>,
+		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
+		avatarFile?: File,
+		removeAvatar?: boolean,
 	) => {
-		await db.updatePlayer(id, updatedData);
+		await db.updatePlayer(id, updatedData, avatarFile, removeAvatar);
+		setPlayers((currentPlayers) =>
+			currentPlayers
+				.map((player) =>
+					player.id === id
+						? {
+								...player,
+								...updatedData,
+								...(avatarFile ? { avatarPath: `${id}/avatar` } : {}),
+								...(removeAvatar ? { avatarPath: undefined } : {}),
+							}
+						: player,
+				)
+				.sort((a, b) => a.name.localeCompare(b.name)),
+		);
 	};
 
 	const deletePlayer = async (id: string) => {
 		await db.deletePlayer(id);
+		setPlayers((currentPlayers) =>
+			currentPlayers.filter((player) => player.id !== id),
+		);
 	};
 
 	const addMatch = async (newMatch: Omit<Match, "id">) => {

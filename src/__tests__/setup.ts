@@ -8,6 +8,13 @@ export type MockSupabaseFrom = Mock;
 // Mock Supabase globally
 vi.mock("../db/supabase", () => ({
 	supabase: {
+		storage: {
+			from: vi.fn(() => ({
+				upload: vi.fn(() => ({ error: null })),
+				remove: vi.fn(() => ({ error: null })),
+				getPublicUrl: vi.fn(() => ({ data: { publicUrl: "" } })),
+			})),
+		},
 		from: vi.fn(() => ({
 			insert: vi.fn(() => ({
 				select: vi.fn(() => ({

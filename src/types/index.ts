@@ -8,6 +8,7 @@ export interface Player {
 	assists: number;
 	seasonId?: string;
 	teamId?: string;
+	avatarPath?: string;
 }
 
 export interface Match {

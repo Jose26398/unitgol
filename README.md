@@ -72,6 +72,14 @@ Track matches, player statistics, and automatically generate balanced teams base
     pnpm build
     ```
 
+### Player photos
+
+Before deploying this version, apply
+`supabase/migrations/20261114000000_player_avatars_and_team_limit.sql` to your
+Supabase project. It configures the avatar bucket (public photo reads), limits
+each photo to 2 MB and JPG, PNG, or WebP, and enforces a 100-player limit per
+team in the database.
+
 ## 📁 Project Structure
 
 ```lua
