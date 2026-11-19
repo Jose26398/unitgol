@@ -1,7 +1,6 @@
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
-import type { Player, PlayerPosition } from "@/types";
-import { PlayerPositionSelector } from "./PlayerPositionSelector";
+import type { Player } from "@/types";
 
 interface NewPlayerFormProps {
 	onAddPlayer: (
@@ -20,7 +19,6 @@ export function NewPlayerForm({
 	playerCount,
 }: NewPlayerFormProps) {
 	const [name, setName] = useState("");
-	const [positions, setPositions] = useState<PlayerPosition[]>([]);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
 
@@ -30,13 +28,8 @@ export function NewPlayerForm({
 		setSaving(true);
 		setError("");
 		try {
-			await onAddPlayer({
-				name: name.trim(),
-				seasonId: selectedSeasonId,
-				positions: positions.length > 0 ? positions : undefined,
-			});
+			await onAddPlayer({ name: name.trim(), seasonId: selectedSeasonId });
 			setName("");
-			setPositions([]);
 		} catch (addError) {
 			setError(
 				addError instanceof Error
@@ -51,9 +44,9 @@ export function NewPlayerForm({
 	return (
 		<form
 			onSubmit={handleSubmit}
-			className="bg-white rounded-lg shadow-md p-6 mb-6 w-full space-y-4"
+			className="bg-white rounded-lg shadow-md p-6 mb-6 w-full"
 		>
-			<h2 className="text-xl font-semibold flex items-center gap-2">
+			<h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
 				<UserPlus className="w-6 h-6 text-emerald-600" />
 				Añadir nuevo jugador
 			</h2>
@@ -75,16 +68,11 @@ export function NewPlayerForm({
 				<button
 					type="submit"
 					disabled={saving || playerCount >= 100}
-					className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors shrink-0"
+					className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
 				>
 					{saving ? "Añadiendo..." : "Añadir jugador"}
 				</button>
 			</div>
-			<PlayerPositionSelector
-				selectedPositions={positions}
-				onChange={setPositions}
-				disabled={saving}
-			/>
 			{error && (
 				<p className="text-red-600 text-sm mt-3" role="alert">
 					{error}

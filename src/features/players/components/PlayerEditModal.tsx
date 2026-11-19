@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { Player, Season } from "@/types";
 import { getPlayerAvatarUrl } from "../utils/playerAvatar";
-import { PlayerPositionSelector } from "./PlayerPositionSelector";
 
 interface PlayerEditModalProps {
 	player: Player;
@@ -13,7 +12,6 @@ interface PlayerEditModalProps {
 		removeAvatar?: boolean,
 	) => Promise<void>;
 	onCancel: () => void;
-	isAdmin?: boolean;
 }
 
 export function PlayerEditModal({
@@ -21,7 +19,6 @@ export function PlayerEditModal({
 	seasons,
 	onSave,
 	onCancel,
-	isAdmin = true,
 }: PlayerEditModalProps) {
 	const [editedData, setEditedData] = useState<Partial<Omit<Player, "id">>>({
 		name: player.name,
@@ -29,7 +26,6 @@ export function PlayerEditModal({
 		goals: player.goals,
 		assists: player.assists,
 		seasonId: player.seasonId,
-		positions: player.positions || [],
 	});
 	const [avatarFile, setAvatarFile] = useState<File | undefined>();
 	const [removeAvatar, setRemoveAvatar] = useState(false);
@@ -119,14 +115,6 @@ export function PlayerEditModal({
 							</button>
 						)}
 					</div>
-					{isAdmin && (
-						<PlayerPositionSelector
-							selectedPositions={editedData.positions || []}
-							onChange={(positions) =>
-								setEditedData({ ...editedData, positions })
-							}
-						/>
-					)}
 					<div>
 						<label
 							htmlFor="player-matches"

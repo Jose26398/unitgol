@@ -1,4 +1,4 @@
-import type { Match, Player, PlayerPosition } from "../types";
+import type { Match, Player } from "../types";
 import type { GoalRow, MatchWithRelations } from "./types";
 
 export function mapPlayerRow(player: {
@@ -11,7 +11,6 @@ export function mapPlayerRow(player: {
 	assists: number;
 	season_id: string | null;
 	avatar_path?: string | null;
-	positions?: (PlayerPosition | string)[] | null;
 }): Player {
 	const mappedPlayer: Player = {
 		id: player.id,
@@ -24,15 +23,6 @@ export function mapPlayerRow(player: {
 		seasonId: player.season_id || undefined,
 	};
 	if (player.avatar_path) mappedPlayer.avatarPath = player.avatar_path;
-	if (player.positions && Array.isArray(player.positions)) {
-		const valid = player.positions.filter(
-			(p): p is PlayerPosition =>
-				p === "defensa" || p === "medio" || p === "banda" || p === "estaca",
-		);
-		if (valid.length > 0) {
-			mappedPlayer.positions = valid;
-		}
-	}
 	return mappedPlayer;
 }
 

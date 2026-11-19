@@ -1,5 +1,5 @@
-import { LayoutGrid, Shuffle, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Shuffle, Users } from "lucide-react";
+import { useState } from "react";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { NewsCard } from "@/features/news/components/NewsCard";
 import { createTeamNews, type UnitGolNews } from "@/features/news/utils/news";
@@ -11,7 +11,6 @@ import {
 } from "@/utils/elo";
 import { calculateScore, generateBalancedTeams } from "@/utils/playerStats";
 import { PlayerSelector } from "./PlayerSelector";
-import { SoccerPitchView } from "./SoccerPitchView";
 import { TeamDisplay } from "./TeamDisplay";
 
 interface TeamGeneratorProps {
@@ -35,13 +34,6 @@ export function TeamGenerator({
 		teamB: Player[];
 	} | null>(null);
 	const [news, setNews] = useState<UnitGolNews | null>(null);
-	const [displayMode, setDisplayMode] = useState<"pitch" | "cards">("pitch");
-
-	const eloRatings = useMemo(
-		() =>
-			ratingMode === "elo" ? calculateEloRatings(matches, seasonId) : null,
-		[matches, seasonId, ratingMode],
-	);
 
 	const handleTogglePlayer = (player: Player) => {
 		setSelectedPlayers((prev) =>
@@ -128,72 +120,27 @@ export function TeamGenerator({
 			</div>
 
 			{teams && (
-				<div className="space-y-6">
-					<div className="flex items-center justify-between border-b border-gray-200 pb-3 flex-wrap gap-2">
-						<h3 className="text-lg font-bold text-gray-800">
-							{displayMode === "pitch"
-								? "Alineación en Campo (Fútbol 7)"
-								: "Equipos Generados"}
-						</h3>
-						<div className="flex items-center gap-2">
-							<button
-								type="button"
-								onClick={() => setDisplayMode("pitch")}
-								className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-									displayMode === "pitch"
-										? "bg-emerald-600 text-white shadow-sm"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-								}`}
-							>
-								⚽ Campo Táctico
-							</button>
-							<button
-								type="button"
-								onClick={() => setDisplayMode("cards")}
-								className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-									displayMode === "cards"
-										? "bg-emerald-600 text-white shadow-sm"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-								}`}
-							>
-								<LayoutGrid className="w-4 h-4" />
-								Tarjetas
-							</button>
-						</div>
-					</div>
-
-					{displayMode === "pitch" ? (
-						<SoccerPitchView
-							teamAPlayers={teams.teamA}
-							teamBPlayers={teams.teamB}
+				<>
+					<div className="grid md:grid-cols-2 gap-6">
+						<TeamDisplay
+							teamName="Equipo A"
+							players={teams.teamA}
 							allPlayers={players}
 							matches={matches}
 							seasonId={seasonId}
 							ratingMode={ratingMode}
-							eloRatings={eloRatings}
 						/>
-					) : (
-						<div className="grid md:grid-cols-2 gap-6">
-							<TeamDisplay
-								teamName="Equipo A"
-								players={teams.teamA}
-								allPlayers={players}
-								matches={matches}
-								seasonId={seasonId}
-								ratingMode={ratingMode}
-							/>
-							<TeamDisplay
-								teamName="Equipo B"
-								players={teams.teamB}
-								allPlayers={players}
-								matches={matches}
-								seasonId={seasonId}
-								ratingMode={ratingMode}
-							/>
-						</div>
-					)}
+						<TeamDisplay
+							teamName="Equipo B"
+							players={teams.teamB}
+							allPlayers={players}
+							matches={matches}
+							seasonId={seasonId}
+							ratingMode={ratingMode}
+						/>
+					</div>
 					{news && <NewsCard news={news} teamName={teamName} />}
-				</div>
+				</>
 			)}
 		</div>
 	);
