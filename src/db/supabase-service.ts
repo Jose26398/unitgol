@@ -1,4 +1,4 @@
-import type { Match, Player, Season } from "../types";
+import type { Match, Player, PlayerPosition, Season } from "../types";
 import { MatchRepository } from "./repositories/MatchRepository";
 import { PlayerRepository } from "./repositories/PlayerRepository";
 import { SeasonRepository } from "./repositories/SeasonRepository";
@@ -24,8 +24,12 @@ export class SupabaseService {
 	}
 
 	// Players
-	async addPlayer(name: string, seasonId?: string): Promise<string> {
-		return this.playerRepo.addPlayer(name, seasonId, this.teamId);
+	async addPlayer(
+		name: string,
+		seasonId?: string,
+		positions?: PlayerPosition[],
+	): Promise<string> {
+		return this.playerRepo.addPlayer(name, seasonId, this.teamId, positions);
 	}
 
 	async updatePlayer(

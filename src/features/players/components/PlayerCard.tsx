@@ -8,6 +8,7 @@ import { calculateRecentForm, recentFormSymbols } from "@/utils/recentForm";
 import { getPlayerAvatarUrl } from "../utils/playerAvatar";
 import { AchievementsSection } from "./AchievementsSection";
 import { PlayerEditModal } from "./PlayerEditModal";
+import { PositionBadge } from "./PlayerPositionSelector";
 
 interface PlayerCardProps {
 	player: Player;
@@ -139,6 +140,13 @@ export function PlayerCard({
 					)}
 				</div>
 				<div className="absolute inset-x-4 bottom-3 text-white">
+					<div className="flex items-center gap-1 flex-wrap mb-1">
+						{player.positions && player.positions.length > 0
+							? player.positions.map((pos) => (
+									<PositionBadge key={pos} position={pos} />
+								))
+							: null}
+					</div>
 					<h3 className="mb-2 wrap-break-word text-xl font-black uppercase leading-tight tracking-wide drop-shadow sm:text-2xl">
 						{player.name}
 					</h3>
@@ -209,6 +217,7 @@ export function PlayerCard({
 					seasons={seasons}
 					onSave={handleSave}
 					onCancel={() => setIsEditing(false)}
+					isAdmin={isAdmin}
 				/>
 			)}
 
