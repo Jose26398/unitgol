@@ -36,8 +36,9 @@ export function ShareButton({
 		const { name, matches, wins, losses, goals, assists } = player;
 		const draws = matches - wins - losses;
 		const winRate = calculateWinRate(player);
-		const goalsPerMatch = (goals / matches).toFixed(2);
-		const assistsPerMatch = (assists / matches).toFixed(2);
+		const goalsPerMatch = matches > 0 ? (goals / matches).toFixed(2) : "0.00";
+		const assistsPerMatch =
+			matches > 0 ? (assists / matches).toFixed(2) : "0.00";
 
 		if (compact) {
 			return `- ${name} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)})\n`;
