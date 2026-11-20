@@ -12,7 +12,6 @@ interface PlayerEditModalProps {
 		removeAvatar?: boolean,
 	) => Promise<void>;
 	onCancel: () => void;
-	isAdmin?: boolean;
 }
 
 export function PlayerEditModal({

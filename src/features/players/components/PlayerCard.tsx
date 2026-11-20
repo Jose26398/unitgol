@@ -209,7 +209,6 @@ export function PlayerCard({
 					seasons={seasons}
 					onSave={handleSave}
 					onCancel={() => setIsEditing(false)}
-					isAdmin={isAdmin}
 				/>
 			)}
 
