@@ -1,7 +1,6 @@
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
-import type { Player, PlayerPosition } from "@/types";
-import { PlayerPositionSelector } from "./PlayerPositionSelector";
+import type { Player } from "@/types";
 
 interface NewPlayerFormProps {
 	onAddPlayer: (
@@ -20,7 +19,6 @@ export function NewPlayerForm({
 	playerCount,
 }: NewPlayerFormProps) {
 	const [name, setName] = useState("");
-	const [positions, setPositions] = useState<PlayerPosition[]>([]);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
 
@@ -33,10 +31,8 @@ export function NewPlayerForm({
 			await onAddPlayer({
 				name: name.trim(),
 				seasonId: selectedSeasonId,
-				positions: positions.length > 0 ? positions : undefined,
 			});
 			setName("");
-			setPositions([]);
 		} catch (addError) {
 			setError(
 				addError instanceof Error
@@ -80,11 +76,6 @@ export function NewPlayerForm({
 					{saving ? "Añadiendo..." : "Añadir jugador"}
 				</button>
 			</div>
-			<PlayerPositionSelector
-				selectedPositions={positions}
-				onChange={setPositions}
-				disabled={saving}
-			/>
 			{error && (
 				<p className="text-red-600 text-sm mt-3" role="alert">
 					{error}

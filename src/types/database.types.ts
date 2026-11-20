@@ -158,7 +158,6 @@ export type Database = {
 					losses: number;
 					matches: number;
 					name: string;
-					positions: string[] | null;
 					season_id: string | null;
 					team_id: string;
 					wins: number;
@@ -173,7 +172,6 @@ export type Database = {
 					losses?: number;
 					matches?: number;
 					name: string;
-					positions?: string[] | null;
 					season_id?: string | null;
 					team_id: string;
 					wins?: number;
@@ -187,7 +185,6 @@ export type Database = {
 					losses?: number;
 					matches?: number;
 					name?: string;
-					positions?: string[] | null;
 					season_id?: string | null;
 					team_id?: string;
 					wins?: number;

@@ -2,7 +2,7 @@ import {
 	PLAYER_AVATAR_BUCKET,
 	validatePlayerAvatar,
 } from "../../features/players/utils/playerAvatar";
-import type { Player, PlayerPosition } from "../../types";
+import type { Player } from "../../types";
 import type { Database } from "../../types/database.types";
 import { mapPlayerRow } from "../mappers";
 import { supabase } from "../supabase";
@@ -12,7 +12,6 @@ export class PlayerRepository {
 		name: string,
 		seasonId: string | undefined,
 		teamId: string | null,
-		positions?: PlayerPosition[],
 	): Promise<string> {
 		if (!teamId) throw new Error("Team not authenticated");
 
@@ -25,7 +24,6 @@ export class PlayerRepository {
 			assists: 0,
 			season_id: seasonId || null,
 			team_id: teamId,
-			...(positions && positions.length > 0 ? { positions } : {}),
 		};
 
 		const { data, error } = await supabase
@@ -94,7 +92,6 @@ export class PlayerRepository {
         assists,
         season_id,
         avatar_path,
-        positions,
         seasons (
           id,
           name,

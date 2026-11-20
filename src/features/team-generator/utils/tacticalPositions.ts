@@ -23,14 +23,51 @@ export interface TeamTacticalFormation {
 }
 
 /**
- * Genera la formación táctica para un equipo enfrentado en el campo de fútbol 7.
+ * Genera la formación táctica para un equipo en el campo de fútbol 7
+ * usando únicamente G/A (goles + asistencias) y la puntuación/ELO del jugador.
  *
- * Reglas de negocio:
- * 1. El portero se elige aleatoriamente.
- * 2. Al jugador de campo con mejor puntuación (ELO o puntos) se le asegura su 1ª posición.
- * 3. Se va rellenando el resto en orden de puntuación (1ª opción, 2ª opción, o hueco restante).
- * 4. Si a un jugador le toca una posición que no tiene asignada, se marca como `isOutOfPosition = true`.
+ * Reglas:
+ * 1. Portero: el jugador con menos G/A; en caso de empate, el de menor ELO/puntuación.
+ * 2. Estaca (arriba): el jugador de campo con más goles (desempate: G/A, luego ELO/puntuación).
+ * 3. Medio (centro): el jugador restante con más asistencias (desempate: G/A, luego ELO/puntuación).
+ * 4. Bandas y defensas: de mayor a menor G/A y ELO/puntuación hacia abajo hasta el portero.
  */
+function getGoalContributions(player: Player): number {
+	return (player.goals || 0) + (player.assists || 0);
+}
+
+function createAssignedOutfield(
+	player: Player,
+	assignedPos: PlayerPosition,
+	count: number,
+	score: number,
+): AssignedPlayer {
+	let slotLabel = "";
+	let slotId = "";
+	if (assignedPos === "defensa") {
+		slotId = `def_${count}`;
+		slotLabel = count === 1 ? "Defensa Izquierdo" : "Defensa Derecho";
+	} else if (assignedPos === "banda") {
+		slotId = `ban_${count}`;
+		slotLabel = count === 1 ? "Banda Izquierda" : "Banda Derecha";
+	} else if (assignedPos === "medio") {
+		slotId = `med_${count}`;
+		slotLabel = count === 1 ? "Medio Centro" : `Medio ${count}`;
+	} else {
+		slotId = `est_${count}`;
+		slotLabel = count === 1 ? "Estaca (Punta)" : `Estaca ${count}`;
+	}
+
+	return {
+		player,
+		tacticalPosition: assignedPos,
+		slotId,
+		slotLabel,
+		isOutOfPosition: false,
+		score,
+	};
+}
+
 export function assignTacticalPositions(
 	players: Player[],
 	getPlayerScore: (player: Player) => number,
@@ -40,10 +77,15 @@ export function assignTacticalPositions(
 		throw new Error("No hay jugadores en el equipo para asignar posiciones.");
 	}
 
-	// 1. Elegir portero aleatoriamente
-	const gkIndex = Math.floor(Math.random() * players.length);
-	const gkPlayer = players[gkIndex];
-	const outfieldPlayers = players.filter((_, idx) => idx !== gkIndex);
+	// 1. Portero: el que menos G/A tenga, y en empate el de menor ELO/puntuación
+	const sortedForGk = [...players].sort(
+		(a, b) =>
+			getGoalContributions(a) - getGoalContributions(b) ||
+			getPlayerScore(a) - getPlayerScore(b),
+	);
+	const gkPlayer = sortedForGk[0];
+	const gkIndex = players.indexOf(gkPlayer);
+	const remaining = players.filter((_, idx) => idx !== gkIndex);
 
 	const porteroAssigned: AssignedPlayer = {
 		player: gkPlayer,
@@ -54,36 +96,27 @@ export function assignTacticalPositions(
 		score: getPlayerScore(gkPlayer),
 	};
 
-	// 2. Ordenar jugadores de campo de mayor a menor puntuación
-	const sortedOutfield = [...outfieldPlayers].sort(
-		(a, b) => getPlayerScore(b) - getPlayerScore(a),
-	);
-
-	// Definir slots disponibles según cantidad de jugadores
-	// Estándar Fútbol 7 (6 de campo): 2 Defensas, 2 Bandas, 1 Medio, 1 Estaca
+	// 2. Definir slots disponibles según cantidad de jugadores de campo
+	// Estándar Fútbol 7 (6 de campo): 1 Estaca, 1 Medio, 2 Bandas, 2 Defensas
 	const availableCapacity: Record<PlayerPosition, number> = {
-		defensa: 2,
-		banda: 2,
-		medio: 1,
 		estaca: 1,
+		medio: 1,
+		banda: 2,
+		defensa: 2,
 	};
 
-	// Adaptación si hay más o menos jugadores de campo
-	const outfieldCount = sortedOutfield.length;
-	if (outfieldCount < 6) {
-		if (outfieldCount <= 4) {
-			availableCapacity.defensa = 1;
-			availableCapacity.banda = 1;
-			availableCapacity.medio = 1;
-			availableCapacity.estaca = 1;
-		} else if (outfieldCount === 5) {
-			availableCapacity.defensa = 2;
-			availableCapacity.banda = 1;
-			availableCapacity.medio = 1;
-			availableCapacity.estaca = 1;
-		}
+	const outfieldCount = remaining.length;
+	if (outfieldCount <= 4) {
+		availableCapacity.estaca = 1;
+		availableCapacity.medio = 1;
+		availableCapacity.banda = 1;
+		availableCapacity.defensa = 1;
+	} else if (outfieldCount === 5) {
+		availableCapacity.estaca = 1;
+		availableCapacity.medio = 1;
+		availableCapacity.banda = 1;
+		availableCapacity.defensa = 2;
 	} else if (outfieldCount > 6) {
-		// Asignar slots extra a medio o defensa
 		let extra = outfieldCount - 6;
 		while (extra > 0) {
 			if (extra % 2 === 0) availableCapacity.medio++;
@@ -92,82 +125,58 @@ export function assignTacticalPositions(
 		}
 	}
 
-	const remainingCapacity = { ...availableCapacity };
-	const assignedOutfield: AssignedPlayer[] = [];
-
 	const slotLabelsCounters: Record<PlayerPosition, number> = {
 		defensa: 0,
 		banda: 0,
 		medio: 0,
 		estaca: 0,
 	};
+	const assignedOutfield: AssignedPlayer[] = [];
 
-	for (const player of sortedOutfield) {
-		const positions = player.positions || [];
-		const primary = positions[0];
-		const secondary = positions[1];
-
-		let assignedPos: PlayerPosition;
-		let outOfPos = false;
-
-		// Al mejor del equipo se le asegura su 1ª posición (porque todas tienen capacidad disponible).
-		// Para el resto: si la 1ª está libre, se le asigna; si no, la 2ª; si no, una libre restante.
-		if (primary && remainingCapacity[primary] > 0) {
-			assignedPos = primary;
-			remainingCapacity[primary]--;
-		} else if (secondary && remainingCapacity[secondary] > 0) {
-			assignedPos = secondary;
-			remainingCapacity[secondary]--;
-		} else {
-			// Buscar cualquier posición que aún tenga hueco
-			const candidatePositions: PlayerPosition[] = [
-				"medio",
-				"defensa",
-				"banda",
-				"estaca",
-			];
-			const openSlot = candidatePositions.find(
-				(pos) => remainingCapacity[pos] > 0,
+	const takeTopPlayers = (
+		pos: PlayerPosition,
+		count: number,
+		comparator: (a: Player, b: Player) => number,
+	) => {
+		if (count <= 0 || remaining.length === 0) return;
+		remaining.sort(comparator);
+		const selected = remaining.splice(0, Math.min(count, remaining.length));
+		for (const player of selected) {
+			slotLabelsCounters[pos]++;
+			assignedOutfield.push(
+				createAssignedOutfield(
+					player,
+					pos,
+					slotLabelsCounters[pos],
+					getPlayerScore(player),
+				),
 			);
-
-			if (openSlot) {
-				assignedPos = openSlot;
-				remainingCapacity[openSlot]--;
-			} else {
-				assignedPos = primary || "medio";
-			}
-
-			outOfPos = !positions.includes(assignedPos);
 		}
+	};
 
-		slotLabelsCounters[assignedPos]++;
-		const count = slotLabelsCounters[assignedPos];
+	const byGAAndScoreDesc = (a: Player, b: Player) =>
+		getGoalContributions(b) - getGoalContributions(a) ||
+		getPlayerScore(b) - getPlayerScore(a);
 
-		let slotLabel = "";
-		let slotId = "";
-		if (assignedPos === "defensa") {
-			slotId = `def_${count}`;
-			slotLabel = count === 1 ? "Defensa Izquierdo" : "Defensa Derecho";
-		} else if (assignedPos === "banda") {
-			slotId = `ban_${count}`;
-			slotLabel = count === 1 ? "Banda Izquierda" : "Banda Derecha";
-		} else if (assignedPos === "medio") {
-			slotId = `med_${count}`;
-			slotLabel = count === 1 ? "Medio Centro" : `Medio ${count}`;
-		} else if (assignedPos === "estaca") {
-			slotId = `est_${count}`;
-			slotLabel = count === 1 ? "Estaca (Punta)" : `Estaca ${count}`;
-		}
+	// 3. Estaca: más goles más arriba (desempate: G/A, luego ELO/puntuación)
+	takeTopPlayers(
+		"estaca",
+		availableCapacity.estaca,
+		(a, b) => b.goals - a.goals || byGAAndScoreDesc(a, b),
+	);
 
-		assignedOutfield.push({
-			player,
-			tacticalPosition: assignedPos,
-			slotId,
-			slotLabel,
-			isOutOfPosition: outOfPos,
-			score: getPlayerScore(player),
-		});
-	}
+	// 4. Medio: más asistencias más en el medio (desempate: G/A, luego ELO/puntuación)
+	takeTopPlayers(
+		"medio",
+		availableCapacity.medio,
+		(a, b) => b.assists - a.assists || byGAAndScoreDesc(a, b),
+	);
+
+	// 5. Bandas: siguientes con mayor G/A y ELO/puntuación
+	takeTopPlayers("banda", availableCapacity.banda, byGAAndScoreDesc);
+
+	// 6. Defensas: los restantes (menor G/A y ELO/puntuación hacia abajo hasta el portero)
+	takeTopPlayers("defensa", remaining.length, byGAAndScoreDesc);
 
 	const defensas = assignedOutfield.filter(
 		(p) => p.tacticalPosition === "defensa",

@@ -43,7 +43,6 @@ export interface Player {
 	seasonId?: string;
 	teamId?: string;
 	avatarPath?: string;
-	positions?: PlayerPosition[];
 }
 
 export interface Match {

@@ -40,19 +40,17 @@ export function ShareButton({
 	const ratingLabel = ratingMode === "elo" ? "ELO" : "Score";
 
 	const generatePlayerSummary = (player: Player, compact = false): string => {
-		const { name, matches, wins, losses, goals, assists, positions } = player;
+		const { name, matches, wins, losses, goals, assists } = player;
 		const draws = matches - wins - losses;
 		const winRate = calculateWinRate(player);
 		const goalsPerMatch = matches > 0 ? (goals / matches).toFixed(2) : "0.00";
 		const assistsPerMatch =
 			matches > 0 ? (assists / matches).toFixed(2) : "0.00";
-		const posStr =
-			positions && positions.length > 0 ? ` [${positions.join(", ")}]` : "";
 
 		if (compact) {
-			return `- ${name}${posStr} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)})\n`;
+			return `- ${name} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)})\n`;
 		}
-		return `- ${name}${posStr} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate.toFixed(2)}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
+		return `- ${name} (${ratingLabel}: ${getPlayerRating(player).toFixed(2)}):\n🥅 Partidos: ${wins} Victorias / ${draws} Empates / ${losses} Derrotas\n🏆 WR: ${winRate.toFixed(2)}%\n⚽️ Goles: ${goals} (Promedio: ${goalsPerMatch} por partido)\n🎯 Asistencias: ${assists} (Promedio: ${assistsPerMatch} por partido)\n\n`;
 	};
 
 	const generateShareableContent = (): string => {
