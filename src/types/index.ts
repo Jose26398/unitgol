@@ -1,3 +1,5 @@
+export type PlayerPosition = "defensa" | "medio" | "banda" | "estaca";
+
 export interface Player {
 	id: string;
 	name: string;
