@@ -7,52 +7,61 @@ export type MockSupabaseFrom = Mock;
 
 // Mock Supabase globally
 vi.mock("../db/supabase", () => ({
-	supabase: {
-		storage: {
-			from: vi.fn(() => ({
-				upload: vi.fn(() => ({ error: null })),
-				remove: vi.fn(() => ({ error: null })),
-				getPublicUrl: vi.fn(() => ({ data: { publicUrl: "" } })),
-			})),
-		},
-		from: vi.fn(() => ({
-			insert: vi.fn(() => ({
-				select: vi.fn(() => ({
-					single: vi.fn(() => ({ data: null, error: null })),
-				})),
-			})),
-			update: vi.fn(() => ({
-				eq: vi.fn(() => ({
-					error: null,
-				})),
-				select: vi.fn(() => ({
-					single: vi.fn(() => ({ data: null, error: null })),
-				})),
-			})),
-			select: vi.fn(() => ({
-				eq: vi.fn(() => ({
-					order: vi.fn(() => ({
-						data: [],
-						error: null,
-					})),
-					single: vi.fn(() => ({
-						data: null,
-						error: null,
-					})),
-				})),
-				order: vi.fn(() => ({
-					data: [],
-					error: null,
-				})),
-			})),
-			delete: vi.fn(() => ({
-				eq: vi.fn(() => ({
-					error: null,
-				})),
-			})),
-			upsert: vi.fn(() => ({
-				error: null,
-			})),
-		})) as MockSupabaseFrom,
-	},
+  supabase: {
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(() => ({ error: null })),
+        remove: vi.fn(() => ({ error: null })),
+        getPublicUrl: vi.fn(() => ({ data: { publicUrl: "" } })),
+      })),
+    },
+    from: vi.fn(() => ({
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(() => ({ data: null, error: null })),
+        })),
+      })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          error: null,
+        })),
+        select: vi.fn(() => ({
+          single: vi.fn(() => ({ data: null, error: null })),
+        })),
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            data: [],
+            error: null,
+          })),
+          single: vi.fn(() => ({
+            data: null,
+            error: null,
+          })),
+        })),
+        order: vi.fn(() => ({
+          data: [],
+          error: null,
+        })),
+      })),
+      delete: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          error: null,
+        })),
+      })),
+      upsert: vi.fn(() => ({
+        error: null,
+      })),
+    })) as MockSupabaseFrom,
+  },
 }));
+
+if (typeof HTMLDialogElement !== "undefined") {
+  HTMLDialogElement.prototype.showModal = function () {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function () {
+    this.open = false;
+  };
+}

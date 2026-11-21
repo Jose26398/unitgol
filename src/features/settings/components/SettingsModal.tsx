@@ -1,199 +1,135 @@
-import { Download } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { supabaseService as db } from "@/db/supabase-service";
-import { useAuth } from "@/features/auth/useAuth";
+import { useState } from "react";
+import { Dialog } from "@/components/ui/Dialog";
 import { SeasonSelector } from "@/features/seasons/components/SeasonSelector";
-import type { Season } from "@/types";
-import type { RatingMode } from "@/utils/elo";
-import { setScoreFactors } from "@/utils/playerStats";
-import { exportDatabase } from "../utils/exportData";
+import type { Season, TeamSettings } from "@/types";
+import { errorMessage } from "@/utils/errors";
 
 interface SettingsModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	seasons: Season[];
-	selectedSeasonId: string | null;
-	onSelectSeason: (seasonId: string | null) => void;
-	ratingMode: RatingMode;
-	onRatingModeChange: (mode: RatingMode) => void;
+  onClose: () => void;
+  seasons: Season[];
+  selectedSeasonId: string | null;
+  onSelectSeason: (id: string | null) => void;
+  settings: TeamSettings;
+  onSave: (settings: TeamSettings) => Promise<void>;
+  onExport: () => void;
+  isAdmin: boolean;
 }
 
 export function SettingsModal({
-	isOpen,
-	onClose,
-	seasons,
-	selectedSeasonId,
-	onSelectSeason,
-	ratingMode,
-	onRatingModeChange,
+  onClose,
+  seasons,
+  selectedSeasonId,
+  onSelectSeason,
+  settings,
+  onSave,
+  onExport,
+  isAdmin,
 }: SettingsModalProps) {
-	const modalRef = useRef<HTMLDivElement>(null);
-	const [goalScoreFactor, setGoalScoreFactor] = useState(10);
-	const [assistScoreFactor, setAssistScoreFactor] = useState(5);
-	const [selectedRatingMode, setSelectedRatingMode] =
-		useState<RatingMode>(ratingMode);
-	const { teamAuth } = useAuth();
-
-	useEffect(() => {
-		setSelectedRatingMode(ratingMode);
-	}, [ratingMode]);
-
-	useEffect(() => {
-		if (teamAuth) {
-			db.setTeamId(teamAuth.id);
-		}
-	}, [teamAuth]);
-
-	useEffect(() => {
-		const loadSettings = async () => {
-			let goal = await db.getSetting("goalScoreFactor");
-			let assist = await db.getSetting("assistScoreFactor");
-
-			// If settings don't exist, create them with defaults
-			if (goal === undefined) {
-				await db.setSetting("goalScoreFactor", 10);
-				goal = 10;
-			}
-			if (assist === undefined) {
-				await db.setSetting("assistScoreFactor", 5);
-				assist = 5;
-			}
-
-			setGoalScoreFactor(goal);
-			setAssistScoreFactor(assist);
-		};
-
-		if (teamAuth) {
-			loadSettings();
-		}
-	}, [teamAuth]);
-
-	const applySettings = async () => {
-		await db.setSetting("goalScoreFactor", goalScoreFactor);
-		await db.setSetting("assistScoreFactor", assistScoreFactor);
-		await db.setSetting("ratingMode", selectedRatingMode === "elo" ? 1 : 0);
-
-		setScoreFactors(goalScoreFactor, assistScoreFactor);
-		onRatingModeChange(selectedRatingMode);
-		onClose();
-	};
-
-	if (!isOpen) return null;
-
-	return (
-		<div
-			className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-			role="dialog"
-			aria-modal="true"
-		>
-			<div
-				ref={modalRef}
-				className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg"
-			>
-				<h2 className="text-xl font-semibold mb-4">Configuración</h2>
-
-				{/* Selector de temporada */}
-				<div className="mb-6">
-					<SeasonSelector
-						seasons={seasons}
-						selectedSeasonId={selectedSeasonId}
-						onSelect={onSelectSeason}
-					/>
-				</div>
-
-				{/* Factor de puntos por gol */}
-				<div className="mb-6">
-					<label
-						htmlFor="ratingMode"
-						className="block text-sm font-medium text-gray-700"
-					>
-						Métrica para valorar jugadores
-					</label>
-					<select
-						id="ratingMode"
-						value={selectedRatingMode}
-						onChange={(event) =>
-							setSelectedRatingMode(event.target.value as RatingMode)
-						}
-						className="block w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-base"
-					>
-						<option value="score">Score</option>
-						<option value="elo">ELO</option>
-					</select>
-				</div>
-
-				{/* Factor de puntos por gol */}
-				<div className="mb-6">
-					<label htmlFor="goalScoreFactor" className="block text-sm font-medium text-gray-700">
-						Factor de puntos por gol
-					</label>
-					<input
-						type="number"
-						id="goalScoreFactor"
-						step="0.1" // Permite decimales
-						value={goalScoreFactor}
-						onChange={(e) =>
-							setGoalScoreFactor(parseFloat(e.target.value) || 0)
-						}
-						className="block w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-base"
-						placeholder="10"
-					/>
-				</div>
-
-				{/* Factor de puntos por asistencia */}
-				<div className="mb-6">
-					<label
-						htmlFor="assistScoreFactor"
-						className="block text-sm font-medium text-gray-700"
-					>
-						Factor de puntos por asistencia
-					</label>
-					<input
-						type="number"
-						id="assistScoreFactor"
-						step="0.1" // Permite decimales
-						value={assistScoreFactor}
-						onChange={(e) =>
-							setAssistScoreFactor(parseFloat(e.target.value) || 0)
-						}
-						className="block w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-base"
-						placeholder="5"
-					/>
-				</div>
-
-				<div className="flex justify-between flex-col md:flex-row gap-4">
-					<div>
-						<button
-							type="button"
-							onClick={exportDatabase}
-							className="flex gap-2 w-full justify-center md:w-fit bg-blue-500 text-white px-4 py-2 rounded-sm hover:bg-blue-600 transition-colors"
-							aria-label="Exportar datos"
-						>
-							<Download className="w-5 h-5" />
-							Exportar datos
-						</button>
-					</div>
-					<div className="flex justify-between space-x-3">
-						<button
-							type="button"
-							onClick={onClose}
-							className="bg-red-500 text-white px-4 py-2 rounded-sm hover:bg-red-600 transition-colors"
-							aria-label="Cerrar modal"
-						>
-							Cerrar
-						</button>
-
-						<button
-							type="button"
-							onClick={applySettings}
-							className="w-full bg-emerald-500 text-white px-4 py-2 rounded-sm hover:bg-emerald-600 transition-colors"
-							aria-label="Aplicar cambios"
-						>
-							Aplicar
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+  const [form, setForm] = useState(settings);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (saving || !isAdmin) return;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(form);
+      onClose();
+    } catch (e) {
+      setError(errorMessage(e, "No se pudo guardar la configuración."));
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <Dialog title="Configuración" onClose={onClose} busy={saving}>
+      <SeasonSelector
+        seasons={seasons}
+        selectedSeasonId={selectedSeasonId}
+        onSelect={onSelectSeason}
+      />
+      <form onSubmit={save} className="space-y-6 mt-6">
+        <fieldset disabled={!isAdmin || saving} className="space-y-6">
+          <div>
+            <label
+              htmlFor="ratingMode"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Métrica para valorar jugadores
+            </label>
+            <select
+              id="ratingMode"
+              value={form.ratingMode}
+              className="block w-full border rounded-md px-4 py-2"
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  ratingMode: e.target.value === "elo" ? "elo" : "score",
+                })
+              }
+            >
+              <option value="score">Score</option>
+              <option value="elo">ELO</option>
+            </select>
+          </div>
+          {(["goalScoreFactor", "assistScoreFactor"] as const).map((key) => (
+            <div key={key}>
+              <label
+                htmlFor={key}
+                className="block text-sm font-medium text-gray-700"
+              >
+                Factor de puntos por{" "}
+                {key === "goalScoreFactor" ? "gol" : "asistencia"}
+              </label>
+              <input
+                id={key}
+                type="number"
+                min="0"
+                max="1000"
+                step="1"
+                required
+                value={form[key]}
+                className="block w-full border rounded-md px-4 py-2"
+                onChange={(e) =>
+                  setForm({ ...form, [key]: e.target.valueAsNumber })
+                }
+              />
+            </div>
+          ))}
+        </fieldset>
+        {error && (
+          <p role="alert" className="text-red-700">
+            {error}
+          </p>
+        )}
+        <div className="flex flex-wrap justify-between gap-3">
+          <button
+            type="button"
+            onClick={onExport}
+            className="bg-blue-500 text-white px-4 py-2 rounded-sm"
+          >
+            Exportar datos
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="bg-gray-300 px-4 py-2 rounded-sm"
+          >
+            Cerrar
+          </button>
+          {isAdmin && (
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-sm"
+            >
+              {saving ? "Guardando..." : "Aplicar"}
+            </button>
+          )}
+        </div>
+      </form>
+    </Dialog>
+  );
 }

@@ -6,9 +6,33 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     versioning-strategy: increase
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react"
+          - "@types/react-dom"
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
