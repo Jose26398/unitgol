@@ -2,43 +2,59 @@ import type { Player } from "@/types";
 import { GoalEntry } from "./GoalEntry";
 
 interface GoalsSectionProps {
-	goals: Array<{ playerId: string; minute: number; assistById?: string }>;
-	players: Player[];
-	availablePlayers: Player[];
-	handleAddGoal: (goal: {
-		playerId: string;
-		minute: number;
-		assistById?: string;
-	}) => void;
-	selectedPlayers: string[];
+  goals: Array<{ playerId: string; minute: number; assistById?: string }>;
+  players: Player[];
+  availablePlayers: Player[];
+  handleAddGoal: (goal: {
+    playerId: string;
+    minute: number;
+    assistById?: string;
+  }) => void;
+  selectedPlayers: string[];
+  teamAPlayerIds: string[];
+  onRemoveGoal: (index: number) => void;
 }
 
 export function GoalsSection({
-	goals,
-	players,
-	availablePlayers,
-	handleAddGoal,
-	selectedPlayers,
+  goals,
+  players,
+  availablePlayers,
+  handleAddGoal,
+  selectedPlayers,
+  teamAPlayerIds,
+  onRemoveGoal,
 }: GoalsSectionProps) {
-	return (
-		<div className="space-y-4">
-			{goals.map((goal) => (
-				<div
-					key={`${goal.playerId}-${goal.minute}`}
-					className="text-sm text-gray-600"
-				>
-					{players.find((p) => p.id === goal.playerId)?.name} ({goal.minute}')
-					{goal.assistById &&
-						` - Asistencia: ${players.find((p) => p.id === goal.assistById)?.name}`}
-				</div>
-			))}
-			{selectedPlayers.length > 0 && (
-				<>
-					<div className="border-t border-gray-400 my-6" />
-					<h3 className="text-lg font-medium text-gray-700 mb-3">Goles</h3>
-					<GoalEntry players={availablePlayers} onAddGoal={handleAddGoal} />
-				</>
-			)}
-		</div>
-	);
+  return (
+    <div className="space-y-4">
+      {goals.map((goal, index) => (
+        <div
+          key={`${goal.playerId}-${goal.minute}`}
+          className="text-sm text-gray-600"
+        >
+          {players.find((p) => p.id === goal.playerId)?.name} ({goal.minute}')
+          {goal.assistById &&
+            ` - Asistencia: ${players.find((p) => p.id === goal.assistById)?.name}`}
+          <button
+            type="button"
+            className="ml-2 text-red-600"
+            onClick={() => onRemoveGoal(index)}
+            aria-label={`Eliminar gol de ${players.find((p) => p.id === goal.playerId)?.name}`}
+          >
+            Eliminar
+          </button>
+        </div>
+      ))}
+      {selectedPlayers.length > 0 && (
+        <>
+          <div className="border-t border-gray-400 my-6" />
+          <h3 className="text-lg font-medium text-gray-700 mb-3">Goles</h3>
+          <GoalEntry
+            players={availablePlayers}
+            onAddGoal={handleAddGoal}
+            teamAPlayerIds={teamAPlayerIds}
+          />
+        </>
+      )}
+    </div>
+  );
 }

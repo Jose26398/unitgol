@@ -1,195 +1,113 @@
-import { useEffect, useState } from "react";
-import { supabaseService as db } from "@/db/supabase-service";
-import { useAuth } from "@/features/auth/useAuth";
-import type { Match, Player, Season } from "@/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { SupabaseService } from "@/db/supabase-service";
+import {
+  DEFAULT_SETTINGS,
+  type Match,
+  type NewPlayer,
+  type Player,
+  type PlayerUpdate,
+  type Season,
+  type TeamSettings,
+} from "@/types";
+import { errorMessage } from "@/utils/errors";
 
-export function useDatabase() {
-	const { teamAuth } = useAuth();
-	const [players, setPlayers] = useState<Player[]>([]);
-	const [matches, setMatches] = useState<Match[]>([]);
-	const [seasons, setSeasons] = useState<Season[]>([]);
-	const [loading, setLoading] = useState({
-		players: true,
-		matches: true,
-		seasons: true,
-	});
-	const [error, setError] = useState<string | null>(null);
+export function useDatabase(db: SupabaseService) {
+  const [data, setData] = useState({
+    players: [] as Player[],
+    matches: [] as Match[],
+    seasons: [] as Season[],
+    settings: DEFAULT_SETTINGS,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(false);
+  const revision = useRef(0);
 
-	// Set team ID in SupabaseService when it changes
-	useEffect(() => {
-		if (teamAuth) {
-			db.setTeamId(teamAuth.id);
-		}
-	}, [teamAuth]);
+  const refresh = useCallback(async () => {
+    const current = ++revision.current;
+    try {
+      const [players, matches, seasons, settings] = await Promise.all([
+        db
+          .getAllPlayers()
+          .then((players) =>
+            players.sort((a, b) => a.name.localeCompare(b.name)),
+          ),
+        db.getAllMatches(),
+        db.getAllSeasons(),
+        Promise.all([
+          db.getSetting("goalScoreFactor"),
+          db.getSetting("assistScoreFactor"),
+          db.getSetting("ratingMode"),
+        ]).then(
+          ([goal, assist, rating]): TeamSettings => ({
+            goalScoreFactor: goal ?? 10,
+            assistScoreFactor: assist ?? 5,
+            ratingMode: rating === 1 ? "elo" : "score",
+          }),
+        ),
+      ]);
+      if (mounted.current && current === revision.current) {
+        setData({ players, matches, seasons, settings });
+        setError(null);
+      }
+    } catch (e) {
+      if (mounted.current && current === revision.current) {
+        setError(
+          errorMessage(
+            e,
+            "No se pudieron actualizar los datos. Recarga para sincronizarlos.",
+          ),
+        );
+      }
+    } finally {
+      if (mounted.current && current === revision.current) setLoading(false);
+    }
+  }, [db]);
 
-	// Fetch initial data when teamAuth changes
-	useEffect(() => {
-		if (!teamAuth) {
-			setPlayers([]);
-			setMatches([]);
-			setSeasons([]);
-			return;
-		}
+  useEffect(() => {
+    mounted.current = true;
+    void refresh();
+    return () => {
+      mounted.current = false;
+      ++revision.current;
+    };
+  }, [refresh]);
 
-		const fetchData = async () => {
-			try {
-				const [playersData, matchesData, seasonsData] = await Promise.all([
-					db.getAllPlayers(),
-					db.getAllMatches(),
-					db.getAllSeasons(),
-				]);
+  async function mutate<T>(action: () => Promise<T>): Promise<T> {
+    const result = await action();
+    // A failed refresh must not make a committed write look like a failed save.
+    if (mounted.current) await refresh();
+    return result;
+  }
 
-				setPlayers(
-					playersData.sort((a: Player, b: Player) =>
-						a.name.localeCompare(b.name),
-					),
-				);
-				setMatches(matchesData);
-				setSeasons(seasonsData);
-			} catch (e) {
-				setError(e instanceof Error ? e.message : "Error al cargar los datos");
-			} finally {
-				setLoading({
-					players: false,
-					matches: false,
-					seasons: false,
-				});
-			}
-		};
-
-		fetchData();
-	}, [teamAuth]);
-	// Season CRUD
-	const addSeason = async (season: Omit<Season, "id">) => {
-		return await db.addSeason(season);
-	};
-
-	const editSeason = async (season: Season) => {
-		await db.updateSeason(season);
-	};
-
-	const deleteSeason = async (id: string) => {
-		await db.deleteSeason(id);
-	};
-
-	const addPlayer = async (
-		newPlayer: Omit<
-			Player,
-			"id" | "matches" | "wins" | "losses" | "goals" | "assists"
-		> & { seasonId: string },
-	) => {
-		const playerId = await db.addPlayer(newPlayer.name, newPlayer.seasonId);
-		setPlayers((currentPlayers) =>
-			[
-				...currentPlayers,
-				{
-					id: playerId,
-					name: newPlayer.name,
-					matches: 0,
-					wins: 0,
-					losses: 0,
-					goals: 0,
-					assists: 0,
-					seasonId: newPlayer.seasonId,
-				},
-			].sort((a, b) => a.name.localeCompare(b.name)),
-		);
-		return playerId;
-	};
-
-	const editPlayer = async (
-		id: string,
-		updatedData: Partial<Omit<Player, "id" | "avatarPath">>,
-		avatarFile?: File,
-		removeAvatar?: boolean,
-	) => {
-		await db.updatePlayer(id, updatedData, avatarFile, removeAvatar);
-		setPlayers((currentPlayers) =>
-			currentPlayers
-				.map((player) =>
-					player.id === id
-						? {
-								...player,
-								...updatedData,
-								...(avatarFile ? { avatarPath: `${id}/avatar` } : {}),
-								...(removeAvatar ? { avatarPath: undefined } : {}),
-							}
-						: player,
-				)
-				.sort((a, b) => a.name.localeCompare(b.name)),
-		);
-	};
-
-	const deletePlayer = async (id: string) => {
-		await db.deletePlayer(id);
-		setPlayers((currentPlayers) =>
-			currentPlayers.filter((player) => player.id !== id),
-		);
-	};
-
-	const addMatch = async (newMatch: Omit<Match, "id">) => {
-		const matchId = await db.addMatch(newMatch);
-
-		// Actualizar el estado local
-		const match = { id: matchId, ...newMatch };
-		setMatches((prev) => [match, ...prev]);
-
-		// Refrescar estadísticas de jugadores
-		try {
-			const playersData = await db.getAllPlayers();
-			setPlayers(playersData);
-		} catch (e) {
-			console.error("Error refreshing players after match add:", e);
-		}
-
-		return matchId;
-	};
-
-	const editMatch = async (updatedMatch: Match) => {
-		await db.editMatch(updatedMatch);
-
-		// Actualizar estado local
-		setMatches((prev: Match[]) =>
-			prev.map((m) => (m.id === updatedMatch.id ? updatedMatch : m)),
-		);
-
-		// Refrescar estadísticas de jugadores ya que pueden haber cambiado
-		try {
-			const playersData = await db.getAllPlayers();
-			setPlayers(playersData);
-		} catch (e) {
-			console.error("Error refreshing players after match edit:", e);
-		}
-	};
-
-	const deleteMatch = async (match: Match) => {
-		await db.deleteMatch(match.id);
-		// Actualizar estado local
-		setMatches((prev: Match[]) => prev.filter((m) => m.id !== match.id));
-
-		// Refrescar estadísticas de jugadores
-		try {
-			const playersData = await db.getAllPlayers();
-			setPlayers(playersData);
-		} catch (e) {
-			console.error("Error refreshing players after match delete:", e);
-		}
-	};
-
-	return {
-		players,
-		matches,
-		seasons,
-		loading,
-		error,
-		addPlayer,
-		editPlayer,
-		deletePlayer,
-		addMatch,
-		editMatch,
-		deleteMatch,
-		addSeason,
-		editSeason,
-		deleteSeason,
-	};
+  return {
+    ...data,
+    loading,
+    error,
+    refresh,
+    addPlayer: (player: NewPlayer) =>
+      mutate(() => db.addPlayer(player.name, player.seasonId)),
+    editPlayer: (
+      id: string,
+      values: PlayerUpdate,
+      avatar?: File,
+      removeAvatar?: boolean,
+    ) => mutate(() => db.updatePlayer(id, values, avatar, removeAvatar)),
+    deletePlayer: (id: string) => mutate(() => db.deletePlayer(id)),
+    addMatch: (match: Omit<Match, "id">) => mutate(() => db.addMatch(match)),
+    editMatch: (match: Match) => mutate(() => db.editMatch(match)),
+    deleteMatch: (match: Match) => mutate(() => db.deleteMatch(match.id)),
+    addSeason: (season: Omit<Season, "id">) =>
+      mutate(() => db.addSeason(season)),
+    editSeason: (season: Season) => mutate(() => db.updateSeason(season)),
+    deleteSeason: (id: string) => mutate(() => db.deleteSeason(id)),
+    saveSettings: (settings: TeamSettings) =>
+      mutate(async () => {
+        await Promise.all([
+          db.setSetting("goalScoreFactor", settings.goalScoreFactor),
+          db.setSetting("assistScoreFactor", settings.assistScoreFactor),
+          db.setSetting("ratingMode", settings.ratingMode === "elo" ? 1 : 0),
+        ]);
+      }),
+  };
 }

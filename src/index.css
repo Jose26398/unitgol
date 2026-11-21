@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-	--font-sans: Outfit, system-ui, sans-serif;
+  --font-sans: Outfit, system-ui, sans-serif;
 
-	--color-primary: #1eb854;
-	--color-secondary: #6c757d;
-	--color-success: #28a745;
-	--color-info: #17a2b8;
-	--color-warning: #ffc107;
-	--color-danger: #dc3545;
-	--color-base: #171212;
+  --color-primary: #1eb854;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-info: #17a2b8;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  --color-base: #171212;
 }
 
 /*
@@ -21,15 +21,119 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-	*,
-	::after,
-	::before,
-	::backdrop,
-	::file-selector-button {
-		border-color: var(--color-gray-200, currentcolor);
-	}
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  button {
+    cursor: pointer;
+    transition:
+      color 180ms ease-out,
+      background-color 180ms ease-out,
+      border-color 180ms ease-out,
+      box-shadow 180ms ease-out,
+      opacity 180ms ease-out,
+      translate 180ms ease-out,
+      scale 180ms ease-out;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-emerald-600);
+    outline-offset: 3px;
+  }
+
+  :where(input, select, textarea) {
+    transition:
+      border-color 180ms ease-out,
+      box-shadow 180ms ease-out;
+  }
 }
 
-button {
-	cursor: pointer;
+@layer components {
+  .ui-surface {
+    background-image: linear-gradient(135deg, #ecfdf580, transparent 45%);
+  }
+
+  .ui-action {
+    background-image: linear-gradient(180deg, #ffffff12, transparent);
+    box-shadow:
+      0 2px 5px #064e3b14,
+      inset 0 1px 0 #ffffff1f;
+  }
+
+  .ui-card {
+    box-shadow: 0 2px 10px -3px #0f172a14;
+    transition:
+      border-color 200ms ease-out,
+      background-color 200ms ease-out,
+      box-shadow 200ms ease-out,
+      translate 200ms ease-out,
+      scale 180ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-enter {
+      animation: ui-enter 240ms ease-out;
+    }
+
+    dialog[open]::backdrop {
+      animation: ui-backdrop 180ms ease-out;
+    }
+
+    button:enabled:active {
+      scale: 0.97;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .ui-card:hover {
+        translate: 0 -3px;
+        box-shadow: 0 10px 24px -10px #064e3b33;
+      }
+
+      .ui-action:hover:enabled {
+        translate: 0 -1px;
+      }
+    }
+  }
+}
+
+@keyframes ui-enter {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+@keyframes ui-backdrop {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
 }
